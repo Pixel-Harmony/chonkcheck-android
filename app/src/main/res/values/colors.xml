@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="chonk_green">#FF10B981</color>
+    <color name="chonk_green_light">#FF34D399</color>
+    <color name="chonk_green_dark">#FF059669</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
