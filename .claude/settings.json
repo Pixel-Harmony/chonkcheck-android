@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "chonkcheck-skills": {
+      "source": {
+        "source": "github",
+        "repo": "Pixel-Harmony/chonkcheck-claude-skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "chonkcheck-skills@chonkcheck-skills": true
+  }
+}

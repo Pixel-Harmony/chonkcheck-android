@@ -379,16 +379,17 @@ fun diaryScreen_showsEntries_whenLoaded() {
 - **NO Co-Authored-By lines** - Never add trailer lines
 - **Use conventional format** - `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`
 
-## Shared Skills
+## Shared Skills Plugin
 
-ChonkCheck shared skills (UX design, copywriter) are in a separate repository:
+ChonkCheck shared skills (UX design, copywriter) are installed as a Claude Code plugin:
 - **Repository**: https://github.com/Pixel-Harmony/chonkcheck-claude-skills
 
-Clone alongside this repo:
-```bash
-cd /path/to/workspace
-git clone https://github.com/Pixel-Harmony/chonkcheck-claude-skills.git
-```
+The plugin is auto-installed via `.claude/settings.json` - no manual setup required.
+
+**Available skills:**
+- `/chonkcheck-skills:ux-design` - UX design guidance
+- `/chonkcheck-skills:copywriter` - Copy refinement with brand voice
+- `/developer` - Android development (local skill)
 
 ## Project Setup
 
