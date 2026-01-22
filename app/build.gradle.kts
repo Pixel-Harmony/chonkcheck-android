@@ -36,6 +36,7 @@ android {
 
         manifestPlaceholders["auth0Domain"] = localProperties.getProperty("AUTH0_DOMAIN", "")
         manifestPlaceholders["auth0Scheme"] = "https"
+        manifestPlaceholders["sentryDsn"] = localProperties.getProperty("SENTRY_DSN", "")
     }
 
     buildTypes {

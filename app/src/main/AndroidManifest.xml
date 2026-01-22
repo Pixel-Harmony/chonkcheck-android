@@ -21,6 +21,11 @@
         android:theme="@style/Theme.ChonkCheck"
         tools:targetApi="35">
 
+        <!-- Sentry configuration -->
+        <meta-data
+            android:name="io.sentry.dsn"
+            android:value="${sentryDsn}" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
