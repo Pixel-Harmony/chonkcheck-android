@@ -5,12 +5,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FoodsResponse(
     val foods: List<FoodDto>,
-    val recipes: List<RecipeDto>? = null,
+    val recipes: List<FoodRecipeSummaryDto>? = null,
     val meals: List<SavedMealDto>? = null
 )
 
+// Simplified recipe summary for food search results
 @Serializable
-data class RecipeDto(
+data class FoodRecipeSummaryDto(
     val id: String,
     val name: String
 )

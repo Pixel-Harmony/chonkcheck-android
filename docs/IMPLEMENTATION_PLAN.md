@@ -24,13 +24,13 @@ Build the ChonkCheck Android app from scratch to achieve full feature parity wit
 | 7 | Foods Core - UI Layer | ✅ Complete |
 | 8 | Barcode Scanning | ✅ Complete |
 | 9 | Diary Core | ✅ Complete |
-| 10 | Weight Tracking | ⏳ Pending |
+| 10 | Weight Tracking | ✅ Complete |
 | 11 | Recipes Feature | ⏳ Pending |
 | 12 | Saved Meals | ⏳ Pending |
 | 13 | Exercise Tracking | ⏳ Pending |
 | 14 | Nutrition Label Scanner | ⏳ Pending |
 | 15 | Settings & Profile | ⏳ Pending |
-| 16 | Dashboard / Home Screen | ⏳ Pending |
+| 16 | Dashboard / Home Screen | ✅ Complete |
 | 17 | Sync Engine & Offline Support | ⏳ Pending |
 | 18 | Polish, Analytics & Release Prep | ⏳ Pending |
 
@@ -484,7 +484,7 @@ presentation/ui/diary/
 
 ---
 
-### Phase 10: Weight Tracking ⏳
+### Phase 10: Weight Tracking ✅
 
 **Goal**: Implement weight logging with history and charts.
 
@@ -784,7 +784,7 @@ presentation/ui/settings/
 
 ---
 
-### Phase 16: Dashboard / Home Screen ⏳
+### Phase 16: Dashboard / Home Screen ✅
 
 **Goal**: Build main dashboard with summary and quick actions.
 
