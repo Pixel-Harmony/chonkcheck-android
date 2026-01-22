@@ -50,13 +50,19 @@ data class FoodEntity(
     val type: String,
     val userId: String?, // Only for user-created foods
 
+    // Source: "user_submitted" or "open_food_facts"
+    val source: String?,
+
     // Metadata
     val verified: Boolean = false,
+    val promotionRequested: Boolean = false,
+    val promotionRequestedAt: Long? = null,
+    val overrideOf: String? = null,
     val imageUrl: String?,
 
     // Sync
     val syncedAt: Long? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val deletedAt: Long? = null
+    val archivedAt: Long? = null
 )

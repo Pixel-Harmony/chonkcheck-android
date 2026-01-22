@@ -1,5 +1,6 @@
 package com.chonkcheck.android.presentation.ui.auth
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chonkcheck.android.domain.model.AuthState
@@ -31,12 +32,12 @@ class LoginViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    fun login() {
+    fun login(activity: Activity) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
 
-            authRepository.login()
+            authRepository.login(activity)
                 .onSuccess {
                     _isLoading.value = false
                 }

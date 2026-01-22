@@ -1,6 +1,7 @@
 package com.chonkcheck.android.di
 
 import com.chonkcheck.android.BuildConfig
+import com.chonkcheck.android.data.api.FoodApi
 import com.chonkcheck.android.data.api.interceptor.AuthInterceptor
 import dagger.Module
 import dagger.Provides
@@ -61,4 +62,9 @@ object NetworkModule {
         .client(okHttpClient)
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
+
+    @Provides
+    @Singleton
+    fun provideFoodApi(retrofit: Retrofit): FoodApi =
+        retrofit.create(FoodApi::class.java)
 }

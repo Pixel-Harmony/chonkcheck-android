@@ -1,5 +1,7 @@
 package com.chonkcheck.android.data.repository
 
+import android.app.Activity
+import android.util.Log
 import com.chonkcheck.android.data.auth.AuthManager
 import com.chonkcheck.android.data.db.dao.UserDao
 import com.chonkcheck.android.data.mappers.toDomain
@@ -13,6 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
+
+private const val TAG = "AuthRepository"
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
@@ -38,27 +42,37 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun login(): Result<User> {
+    override suspend fun login(activity: Activity): Result<User> {
         return try {
+            Log.d(TAG, "Login started")
             _authState.value = AuthState.Loading
 
-            val credentials = authManager.login()
-            val auth0Profile = authManager.getUserProfile()
-            val user = auth0Profile.toDomain()
+            val credentials = authManager.login(activity)
+            Log.d(TAG, "Credentials received: ${credentials.accessToken.take(20)}...")
+
+            val userProfile = credentials.user
+            Log.d(TAG, "User profile: id=${userProfile.getId()}, email=${userProfile.email}, name=${userProfile.name}")
+
+            val user = userProfile.toDomain()
+            Log.d(TAG, "Domain user: id=${user.id}, email=${user.email}")
 
             userDao.insert(user.toEntity())
+            Log.d(TAG, "User inserted to DB")
+
             _authState.value = AuthState.Authenticated(user)
+            Log.d(TAG, "Auth state set to Authenticated")
 
             Result.success(user)
         } catch (e: Exception) {
+            Log.e(TAG, "Login failed", e)
             _authState.value = AuthState.Error(e.message ?: "Login failed")
             Result.failure(e)
         }
     }
 
-    override suspend fun logout() {
+    override suspend fun logout(activity: Activity) {
         try {
-            authManager.logout()
+            authManager.logout(activity)
             userDao.deleteAll()
             _authState.value = AuthState.Unauthenticated
         } catch (e: Exception) {
@@ -80,7 +94,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override fun getAccessToken(): String? = authManager.getAccessToken()
 
-    suspend fun loadUserFromCache() {
+    override suspend fun loadUserFromCache() {
         if (!authManager.hasValidCredentials()) {
             _authState.value = AuthState.Unauthenticated
             return
@@ -91,10 +105,8 @@ class AuthRepositoryImpl @Inject constructor(
             if (cachedUser != null) {
                 _authState.value = AuthState.Authenticated(cachedUser.toDomain())
             } else {
-                val auth0Profile = authManager.getUserProfile()
-                val user = auth0Profile.toDomain()
-                userDao.insert(user.toEntity())
-                _authState.value = AuthState.Authenticated(user)
+                // No cached user but have credentials - require re-login to get fresh user info
+                _authState.value = AuthState.Unauthenticated
             }
         } catch (e: Exception) {
             _authState.value = AuthState.Error(e.message ?: "Failed to load user")

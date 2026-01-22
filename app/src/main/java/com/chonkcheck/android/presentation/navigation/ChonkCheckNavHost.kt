@@ -21,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.chonkcheck.android.presentation.ui.auth.LoginScreen
+import com.chonkcheck.android.presentation.ui.onboarding.OnboardingScreen
 
 @Composable
 fun ChonkCheckNavHost(
@@ -91,7 +92,13 @@ fun ChonkCheckNavHost(
 
             // Onboarding
             composable(Screen.Onboarding.route) {
-                PlaceholderScreen("Onboarding")
+                OnboardingScreen(
+                    onOnboardingComplete = {
+                        navController.navigate(Screen.Dashboard.route) {
+                            popUpTo(Screen.Onboarding.route) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             // Main screens

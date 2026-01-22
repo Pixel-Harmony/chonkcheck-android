@@ -51,6 +51,47 @@ interface UserDao {
         updatedAt: Long = System.currentTimeMillis()
     )
 
+    @Query("""
+        UPDATE users SET
+            weightUnit = :weightUnit,
+            heightUnit = :heightUnit,
+            height = :height,
+            birthDate = :birthDate,
+            sex = :sex,
+            activityLevel = :activityLevel,
+            weightGoal = :weightGoal,
+            targetWeight = :targetWeight,
+            weeklyGoal = :weeklyGoal,
+            dailyCalorieTarget = :calories,
+            proteinTarget = :protein,
+            carbsTarget = :carbs,
+            fatTarget = :fat,
+            bmr = :bmr,
+            tdee = :tdee,
+            onboardingCompleted = 1,
+            updatedAt = :updatedAt
+        WHERE id = :userId
+    """)
+    suspend fun completeOnboarding(
+        userId: String,
+        weightUnit: String,
+        heightUnit: String,
+        height: Double,
+        birthDate: String,
+        sex: String,
+        activityLevel: String,
+        weightGoal: String,
+        targetWeight: Double?,
+        weeklyGoal: Double?,
+        calories: Int,
+        protein: Int,
+        carbs: Int,
+        fat: Int,
+        bmr: Int,
+        tdee: Int,
+        updatedAt: Long = System.currentTimeMillis()
+    )
+
     @Query("DELETE FROM users WHERE id = :userId")
     suspend fun delete(userId: String)
 

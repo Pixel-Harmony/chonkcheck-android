@@ -19,7 +19,7 @@ Build the ChonkCheck Android app from scratch to achieve full feature parity wit
 | 2 | Core Architecture Foundation | ✅ Complete |
 | 3 | Room Database Schema & Entities | ✅ Complete |
 | 4 | Authentication with Auth0 | ✅ Complete |
-| 5 | Onboarding Flow | ⏳ Pending |
+| 5 | Onboarding Flow | ✅ Complete |
 | 6 | Foods Core - Data Layer | ⏳ Pending |
 | 7 | Foods Core - UI Layer | ⏳ Pending |
 | 8 | Barcode Scanning | ⏳ Pending |
@@ -133,7 +133,7 @@ di/AuthModule.kt
 
 ---
 
-### Phase 5: Onboarding Flow ⏳
+### Phase 5: Onboarding Flow ✅
 
 **Goal**: Implement 3-step onboarding for new users.
 
@@ -144,14 +144,16 @@ di/AuthModule.kt
 - TDEE calculation (Mifflin-St Jeor)
 - Navigation guards redirect incomplete users
 
-**Files to Create**:
+**Files Created**:
 ```
-domain/model/UserProfile.kt, DailyGoals.kt, UnitPreferences.kt
 domain/usecase/CalculateTdeeUseCase.kt, CompleteOnboardingUseCase.kt
+presentation/MainViewModel.kt
 presentation/ui/onboarding/
   OnboardingScreen.kt, UnitsStepScreen.kt, ProfileStepScreen.kt, GoalsStepScreen.kt
   OnboardingViewModel.kt
 ```
+
+**Note**: Domain models (UserProfile, DailyGoals, UnitPreferences) were already defined in User.kt during Phase 2.
 
 ---
 
@@ -164,6 +166,40 @@ presentation/ui/onboarding/
 - FoodRepository with Room-first, network-refresh pattern
 - Domain Food model and mappers
 - Search with local data, background network refresh
+
+**API Endpoints**:
+```
+GET /foods?search={query}&type={all|user}&includeRecipes={bool}&includeMeals={bool}
+GET /foods/:id
+POST /foods
+PUT /foods/:id
+DELETE /foods/:id
+POST /foods/:id/promote
+GET /foods/barcode/:code
+POST /nutrition-labels (body: { image: base64, mediaType: string })
+```
+
+**Food Data Model**:
+```kotlin
+data class Food(
+    val id: String,
+    val name: String,
+    val brand: String?,
+    val barcode: String?,
+    val servingSize: Double,
+    val servingUnit: String,  // g, ml, oz, cup, tablespoon, teaspoon, piece, slice
+    val calories: Double,
+    val protein: Double,
+    val carbs: Double,
+    val fat: Double,
+    val fiber: Double?,       // Optional
+    val sugar: Double?,       // Optional
+    val sodium: Double?,      // Optional (in mg)
+    val type: FoodType,       // PLATFORM or USER
+    val overrideOf: String?,  // If overriding platform food
+    val promotionRequested: Boolean
+)
+```
 
 **Files to Create**:
 ```
@@ -188,6 +224,90 @@ domain/usecase/SearchFoodsUseCase.kt, GetFoodByIdUseCase.kt, CreateUserFoodUseCa
 - Create/Edit food forms
 - Reusable FoodCard component
 
+#### Foods List Screen
+
+**Page Header:**
+- Title: "Foods"
+- Add button: "+ Add" (orange color `#f97316`)
+
+**Sub-tabs:**
+- "All Foods" | "My Foods"
+- Active state: orange background with shadow
+
+**Search Bar:**
+- Placeholder: "Search foods..."
+- Icon: Magnifying glass (orange when active)
+- Debounce: 300ms, minimum 1 character
+
+**Empty States:**
+| Scenario | Message | CTA |
+|----------|---------|-----|
+| No foods (all tab) | "No foods in the database yet" | "Add First Food" |
+| No search results | "No foods found" | "Add First Food" |
+| No user foods | "You haven't created any foods yet" | "Add First Food" |
+
+**Attribution Footer:**
+- Text: "Some food data sourced from Open Food Facts"
+- Link: https://world.openfoodfacts.org
+
+#### Food Card Component
+```
+┌─────────────────────────────────────────────────┐
+│ [Name] [Platform Badge] [Revised Badge]    [X]  │
+│ [Brand]                                         │
+│ [Serving: 100g]                                 │
+│ P: 25g · C: 30g · F: 10g          [Calories]   │
+│                                      cal        │
+└─────────────────────────────────────────────────┘
+```
+
+**Badges:**
+- "Platform" - Teal (`#14b8a6`)
+- "Revised" - Cyan (`#22d3ee`)
+- "Review" - Amber (`#f59e0b`)
+
+**Macro Format:** `P: {protein}g · C: {carbs}g · F: {fat}g`
+
+#### Add/Edit Food Form
+
+**Quick Actions (Add only):**
+- "Scan Barcode" - Barcode icon, orange
+- "Scan Label" - Camera icon, orange
+
+**Form Fields:**
+| Field | Type | Required | Placeholder |
+|-------|------|----------|-------------|
+| Name | text | Yes | "e.g., Chicken Breast" |
+| Brand | text | No | "Optional" |
+| Barcode | text | No | "Optional" |
+| Serving Size | number | Yes | "100" |
+| Unit | select | Yes | Options: g, ml, oz, cup, tablespoon, teaspoon, piece, slice |
+
+**Nutrition Section (per serving):**
+| Field | Type | Required | Step |
+|-------|------|----------|------|
+| Calories | number | Yes | 1 |
+| Protein (g) | number | Yes | 0.1 |
+| Carbs (g) | number | Yes | 0.1 |
+| Fat (g) | number | Yes | 0.1 |
+| Fiber (g) | number | No | 0.1 |
+| Sugar (g) | number | No | 0.1 |
+| Sodium (mg) | number | No | 1 |
+
+**Buttons:**
+- Save: "Save Food" (add) / "Save Changes" (edit)
+- Loading: "Saving..."
+
+**Platform Food Notice:**
+- Message: "This is a platform food and cannot be edited."
+- Override CTA: "Disagree with these nutrition facts? Create your own version."
+- Button: "Create My Version"
+
+**Submit to ChonkCheck:**
+- Regular: "Want to share this food with all ChonkCheck users? Submit it for review."
+- Override: "Think your corrections should replace the platform version? Submit as a revision for review."
+- Button: "Submit to ChonkCheck" / "Submit Revision"
+
 **Files to Create**:
 ```
 presentation/ui/foods/
@@ -208,6 +328,19 @@ presentation/ui/foods/
 - Barcode scanner with live preview
 - API lookup for scanned barcode
 - "Not found" flow with option to create food
+
+**UI States:**
+
+**Barcode Lookup Loading:**
+- Message: "Looking up barcode in database..."
+- Spinner: Small circular loader
+
+**Success (from Open Food Facts):**
+- Notice: "Product details loaded from Open Food Facts. Review and edit as needed before saving."
+- Background: Teal
+
+**Not Found:**
+- Message: "Hmm, can't find that barcode. Try adding the food manually."
 
 **Files to Create**:
 ```
@@ -231,6 +364,112 @@ presentation/util/PermissionHandler.kt
 - Daily totals calculation
 - Edit/delete entries
 
+#### Diary Screen Layout
+```
+┌─────────────────────────────────┐
+│ [Logo] [Date Selector]          │
+├─────────────────────────────────┤
+│ [MacroSummary - 4 rings]        │
+├─────────────────────────────────┤
+│ [Weight Projection] (if shown)  │
+├─────────────────────────────────┤
+│ [Complete Day] (if today)       │
+├─────────────────────────────────┤
+│ Breakfast              + Add    │
+│ [entries or "No items"]         │
+├─────────────────────────────────┤
+│ Lunch                  + Add    │
+│ [entries or "No items"]         │
+├─────────────────────────────────┤
+│ Dinner                 + Add    │
+│ [entries or "No items"]         │
+├─────────────────────────────────┤
+│ Snack                  + Add    │
+│ [entries or "No items"]         │
+├─────────────────────────────────┤
+│ Exercise         + Add Exercise │
+│ [entries or empty state]        │
+│ [Net calories summary]          │
+└─────────────────────────────────┘
+```
+
+#### Date Selector
+- Format: Day of week ("EEEE") + Full date ("MMMM d, yyyy")
+- Example: "Friday\nJanuary 17, 2025"
+- Navigation: Left/right arrows
+
+#### Meal Section Colors
+| Meal | Color |
+|------|-------|
+| Breakfast | Coral `#ff6347` |
+| Lunch | Amber `#f59e0b` |
+| Dinner | Vivid `#22c55e` |
+| Snack | Purple `#a855f7` |
+
+#### Macro Summary (4 circular rings)
+| Macro | Color | Background | Unit |
+|-------|-------|------------|------|
+| Cal | Coral `#ff6347` | `#ffe8e3` | - |
+| Pro | Teal `#14b8a6` | `#ccfbf1` | g |
+| Carb | Vivid `#22c55e` | `#dcfce8` | g |
+| Fat | Amber `#f59e0b` | `#fef3c7` | g |
+
+**Display:** Percentage in center, label below, current/goal values
+
+#### Diary Entry Card
+```
+┌─────────────────────────────────────────┐
+│ [●] [Food Name]           [Delete]      │
+│     [Brand]                             │
+│     [1.5 x 100g]                        │
+│     P: 25g · C: 30g · F: 10g   350 cal  │
+└─────────────────────────────────────────┘
+```
+
+**Indicator Colors:**
+- Food: Orange `#f97316`
+- Recipe: Vivid `#22c55e`
+- Meal: Purple `#a855f7`
+
+#### Add to Diary Flow
+**Header:** "Add to {Meal}" or "Edit {Meal}"
+
+**Meal Selector:** Breakfast | Lunch | Dinner | Snack (horizontal buttons)
+
+**Search Placeholder:** "Find your scran..."
+
+**Input Mode Toggle:**
+- "Servings" | "Amount"
+- Active: Primary background
+
+**Serving Info:** "1 serving = {servingSize}{unit}"
+
+**Nutrition Display:**
+```
+Total nutrition:
+350 cal
+P: 25g · C: 30g · F: 10g
+```
+
+**Buttons:**
+- Primary: "Log It" (new) / "Update" (edit)
+- Secondary: "Back" (new) / "Cancel" (edit)
+- Loading: "Logging..." / "Updating..."
+
+#### Complete Day Button
+- Incomplete: "Complete Day" (green gradient)
+- Completed: "Reopen" (orange)
+- Loading: "Saving..."
+
+#### Exercise Section
+**Empty State:** "No exercise logged yet. Add one to get started!"
+
+**Net Calories Summary:**
+```
+Total exercise:    300 cal
+Net calories:     1700 cal
+```
+
 **Files to Create**:
 ```
 domain/model/DiaryEntry.kt, DiarySummary.kt, MealType.kt
@@ -240,7 +479,7 @@ data/api/DiaryApi.kt, repository/DiaryRepositoryImpl.kt
 presentation/ui/diary/
   DiaryScreen.kt, DiaryViewModel.kt
   AddToDiarySheet.kt, EditEntrySheet.kt
-  components/DateNavigator.kt, MealSection.kt, DiaryEntryCard.kt, DailySummaryCard.kt
+  components/DateNavigator.kt, MealSection.kt, DiaryEntryCard.kt, DailySummaryCard.kt, MacroSummary.kt
 ```
 
 ---
@@ -255,6 +494,42 @@ presentation/ui/diary/
 - Weight history list
 - Statistics (current, change, average, trend)
 - Milestones
+
+#### Stats Cards (3-column grid)
+| Card | Background | Label |
+|------|------------|-------|
+| Starting Weight | Purple `#a855f7` | "Starting" |
+| Current Weight | Vivid `#22c55e` | "Current" |
+| Total Change | Amber `#f59e0b` | "Total Change" |
+
+#### Weight Chart
+- Library: Use Vico (Android charting library)
+- Actual line: Solid green `#22c55e` with dots
+- Trend line: Dashed teal `#14b8a6` (7+ entries)
+- X-axis: "MMM d" format
+- Y-axis: Auto-scaled weight values
+
+#### Log Weight Form
+**Fields:**
+| Field | Type | Placeholder |
+|-------|------|-------------|
+| Weight (kg/lb) | number | "0.0" |
+| Stones (if st) | number | "0" |
+| Pounds (if st) | number | "0" |
+| Unit | select | kg, lb, st/lb |
+| Date | date | Today |
+| Notes | text | "e.g., After workout" |
+
+**Button:** "Log Weight" / "Saving..."
+
+#### History Section
+**Empty State:** "No weight entries yet. Start tracking above!"
+
+**Entry Format:**
+- Date: "EEEE, MMM d" (e.g., "Monday, Jan 15")
+- Weight: Formatted with unit
+- Notes: Below date if present
+- Delete: Trash icon
 
 **Files to Create**:
 ```
@@ -278,6 +553,50 @@ presentation/ui/weight/
 - Auto-calculate nutrition per serving
 - Use recipe in diary (treated like a food)
 
+#### Recipe List
+**Header:** "My Recipes"
+**Add Button:** "+ Add" (vivid `#22c55e`)
+**Search Placeholder:** "Search recipes..."
+
+**Recipe Card:**
+```
+┌─────────────────────────────────────────┐
+│ [●] [Recipe Name]              [Delete] │
+│     3 ingredient(s) · 4 serving(s)      │
+│     P: 25g · C: 30g · F: 10g   450 cal  │
+└─────────────────────────────────────────┘
+```
+- Indicator: Vivid dot
+
+**Empty State:**
+- Message: "You haven't created any recipes yet"
+- Subtext: "Save your favorite food combinations as recipes for easy logging"
+- CTA: "Create First Recipe"
+
+#### Create/Edit Recipe Form
+**Basic Info:**
+| Field | Type | Required | Placeholder |
+|-------|------|----------|-------------|
+| Recipe Name | text | Yes | "e.g., Chicken Stir Fry" |
+| Description | textarea | No | "Optional notes about this recipe" |
+| Total Servings | number | Yes | min=1 |
+| Serving Unit | select | Yes | serving, bowl, plate, portion, cup, piece |
+
+**Ingredients Section:**
+- Search: "Search foods..."
+- Empty: "No ingredients added yet. Search for foods or recipes above."
+
+**Nutrition Summary:**
+```
+┌─────────────────────┬─────────────────────┐
+│ Total Recipe        │ Per {servingUnit}   │
+│ 1800 calories       │ 450 calories        │
+│ P: 100g C: 120g F:40│ P: 25g C: 30g F: 10g│
+└─────────────────────┴─────────────────────┘
+```
+
+**Button:** "Save Recipe" / "Update Recipe" / "Saving..."
+
 **Files to Create**:
 ```
 domain/model/Recipe.kt, RecipeIngredient.kt
@@ -299,6 +618,46 @@ presentation/ui/recipes/
 - Create saved meal from foods/recipes
 - Quick-add saved meal to diary (adds all items)
 - Edit/delete saved meals
+
+#### Saved Meals List
+**Header:** "My Meals"
+**Add Button:** "+ Add" (purple `#a855f7`)
+**Search Placeholder:** "Search meals..."
+
+**Meal Card:**
+```
+┌─────────────────────────────────────────┐
+│ [●] [Meal Name]                [Delete] │
+│     4 item(s)                           │
+│     P: 50g · C: 60g · F: 20g   650 cal  │
+└─────────────────────────────────────────┘
+```
+- Indicator: Purple dot
+
+**Empty State:**
+- Message: "You haven't saved any meals yet"
+- Subtext: "Save food combinations to log your usual meals with one tap"
+- CTA: "Create First Meal"
+
+#### Create/Edit Meal Form
+**Basic Info:**
+| Field | Type | Required | Placeholder |
+|-------|------|----------|-------------|
+| Meal Name | text | Yes | "e.g., My Usual Breakfast" |
+
+**Helper Text:** "Save a combination of foods and recipes to log together"
+
+**Items Section:**
+- Search: "Search foods or recipes to add..."
+- Empty: "No items added yet. Search for foods or recipes above."
+
+**Total Nutrition:**
+```
+650 calories
+P: 50g · C: 60g · F: 20g
+```
+
+**Button:** "Save Meal" / "Update Meal" / "Saving..."
 
 **Files to Create**:
 ```
@@ -366,6 +725,55 @@ presentation/ui/scanner/
 - Theme selection (light/dark/system)
 - Privacy settings, data export, account deletion
 
+#### Settings Sections
+
+**1. Account Section**
+- User avatar + email
+- "Logged in with Auth0"
+- Button: "Sign Out" (red)
+
+**2. Preferences Section**
+- Weight Unit: "Kilograms (kg)", "Pounds (lb)", "Stones & Pounds (st/lb)"
+- Height Unit: "Centimetres (cm)", "Feet & Inches (ft/in)"
+- Appearance: "Light" | "Dark" | "System"
+
+**3. Body & Goals Section**
+
+*Body Measurements:*
+- Height (cm or ft/in dual input)
+- Age (number, min=13, max=120)
+- Sex: "Male" | "Female"
+- Activity Level (dropdown with descriptions)
+- Starting/Current Weight (readonly if logged, editable if not)
+
+*TDEE Display:*
+- Card: Primary green background
+- Text: "What you burn each day"
+- Value: "{tdee} cal/day"
+
+*Weight Goals (if TDEE exists):*
+- "Lose Weight" | "Maintain" | "Gain Weight"
+- Rate options with weekly deficit/surplus
+- Warning icon if <1200 cal
+
+*Diet Preset:*
+- Dropdown: Balanced, Low Carb, High Protein, Keto, GLP-1 Friendly, Mediterranean, Custom
+- Shows ratio: "(30/40/30)"
+- Custom: Three sliders totaling 100%
+
+*Daily Macro Goals:*
+- Calories, Protein (g), Carbs (g), Fat (g)
+
+**4. Privacy & Data Section**
+- "Data Processing Consent: Given"
+- "Export My Data" → downloads JSON
+- "Privacy Policy" → link
+
+**5. Danger Zone Section**
+- Warning: "Permanently delete your account and all associated data. This can't be undone."
+- Button: "Delete My Account"
+- Confirmation: Type "DELETE" to confirm
+
 **Files to Create**:
 ```
 domain/usecase/UpdateProfileUseCase.kt, UpdateGoalsUseCase.kt, ExportUserDataUseCase.kt
@@ -386,6 +794,19 @@ presentation/ui/settings/
 - Recent weight widget
 - Milestone celebrations
 - Pull-to-refresh
+
+#### Today's Summary
+- Same MacroSummary component as Diary
+- 4 circular progress rings
+
+#### Quick Actions
+- Add Food (orange)
+- Scan Barcode (orange)
+- Log Weight (green)
+
+#### Recent Weight Widget
+- Shows latest weight + trend
+- Link to weight page
 
 **Files to Create**:
 ```
@@ -438,6 +859,53 @@ core/analytics/AnalyticsManager.kt
 presentation/ui/components/SkeletonLoading.kt, EmptyState.kt
 app/src/main/baseline-prof.txt
 ```
+
+---
+
+## Global UI Patterns
+
+### Feature Color Mapping
+| Feature | Primary Color | Hex |
+|---------|---------------|-----|
+| Foods | Orange | `#f97316` |
+| Recipes | Vivid/Cyan | `#22c55e` |
+| Meals | Purple | `#a855f7` |
+| Weight | Green | `#22c55e` |
+| Exercise | Coral | `#ff6347` |
+
+### Common Components
+
+**Search Bar:**
+- Icon on left (feature color)
+- Placeholder text
+- 300ms debounce
+
+**Empty State:**
+- Icon (feature color, 64dp)
+- Primary message (medium weight)
+- Secondary message (muted)
+- CTA button (feature color)
+
+**Card Styling:**
+- Background: Surface
+- Rounded: 12dp
+- Shadow: Small
+- Padding: 16dp
+
+**Unsaved Changes Modal:**
+- Title: "Unsaved changes"
+- Message: "You have unsaved changes. Are you sure you want to go back?"
+- Buttons: "Stay" | "Discard" (red)
+
+---
+
+## Verification Checklist
+
+1. Build: `./gradlew.bat assembleDebug`
+2. Compare each screen with web app visually
+3. Verify all copy text matches exactly
+4. Test all unit options work correctly
+5. Test light/dark mode
 
 ---
 

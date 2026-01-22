@@ -1,5 +1,6 @@
 package com.chonkcheck.android.data.auth
 
+import android.app.Activity
 import android.content.Context
 import com.auth0.android.Auth0
 import com.auth0.android.authentication.AuthenticationAPIClient
@@ -22,7 +23,7 @@ class AuthManager @Inject constructor(
     private val tokenStorage: TokenStorage
 ) {
     private val auth0: Auth0 by lazy {
-        Auth0(
+        Auth0.getInstance(
             BuildConfig.AUTH0_CLIENT_ID,
             BuildConfig.AUTH0_DOMAIN
         )
@@ -32,12 +33,12 @@ class AuthManager @Inject constructor(
         AuthenticationAPIClient(auth0)
     }
 
-    suspend fun login(): Credentials = suspendCancellableCoroutine { continuation ->
+    suspend fun login(activity: Activity): Credentials = suspendCancellableCoroutine { continuation ->
         WebAuthProvider.login(auth0)
-            .withScheme("https")
+            .withScheme("com.chonkcheck.android")
             .withScope("openid profile email offline_access")
-            .withAudience("https://${BuildConfig.AUTH0_DOMAIN}/api/v2/")
-            .start(context, object : Callback<Credentials, AuthenticationException> {
+            .withAudience(BuildConfig.AUTH0_AUDIENCE)
+            .start(activity, object : Callback<Credentials, AuthenticationException> {
                 override fun onSuccess(result: Credentials) {
                     saveCredentials(result)
                     continuation.resume(result)
@@ -49,10 +50,10 @@ class AuthManager @Inject constructor(
             })
     }
 
-    suspend fun logout() = suspendCancellableCoroutine { continuation ->
+    suspend fun logout(activity: Activity) = suspendCancellableCoroutine { continuation ->
         WebAuthProvider.logout(auth0)
-            .withScheme("https")
-            .start(context, object : Callback<Void?, AuthenticationException> {
+            .withScheme("com.chonkcheck.android")
+            .start(activity, object : Callback<Void?, AuthenticationException> {
                 override fun onSuccess(result: Void?) {
                     clearCredentials()
                     continuation.resume(Unit)

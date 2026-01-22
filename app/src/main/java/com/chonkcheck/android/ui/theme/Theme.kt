@@ -73,7 +73,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun ChonkCheckTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // Disabled to use brand colors
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

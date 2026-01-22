@@ -327,6 +327,75 @@ suspend fun getFoods(query: String): Result<List<Food>> {
 }
 ```
 
+## Design System
+
+### Brand Colors
+
+| Color | Hex | Usage |
+|-------|-----|-------|
+| Vivid Green 500 | `#22c55e` | Primary brand color |
+| Vivid Green 600 | `#16a34a` | Primary dark/pressed |
+| Vivid Green 400 | `#4ade80` | Primary light |
+| Coral | `#f97316` | Accent, warnings |
+| Amber | `#f59e0b` | Carbs macro color |
+| Blue | `#3b82f6` | Protein macro color |
+| Red | `#ef4444` | Fat macro color, errors |
+
+### Semantic Colors (Light Mode)
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| Background | `#fafafa` | Page background |
+| Surface | `#ffffff` | Card background |
+| Surface Muted | `#f4f4f5` | Secondary surfaces |
+| Border | `#e4e4e7` | Card/input borders |
+| Foreground | `#18181b` | Primary text |
+| Foreground Muted | `#71717a` | Secondary text |
+
+### Semantic Colors (Dark Mode)
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| Background | `#09090b` | Page background |
+| Surface | `#18181b` | Card background |
+| Surface Muted | `#27272a` | Secondary surfaces |
+| Border | `#3f3f46` | Card/input borders |
+| Foreground | `#fafafa` | Primary text |
+| Foreground Muted | `#a1a1aa` | Secondary text |
+
+### Typography
+
+- **Font Family**: Inter (Google Fonts)
+- **Display**: Inter SemiBold, 36sp
+- **Headline**: Inter SemiBold, 24-28sp
+- **Title**: Inter Medium, 16-22sp
+- **Body**: Inter Regular, 14-16sp
+- **Label**: Inter Medium, 12-14sp
+
+### Sizing & Touch Targets
+
+- **Minimum touch target**: 44x44 dp
+- **Button height**: 52dp
+- **Input height**: 56dp
+- **Card padding**: 16-20dp
+- **Screen padding**: 24dp
+
+### Border Radius
+
+| Element | Radius |
+|---------|--------|
+| Buttons | 8dp (medium) |
+| Cards | 12dp (large) |
+| Inputs | 8dp (medium) |
+| Chips | 8dp (medium) |
+
+### Copy Guidelines
+
+- **Button text with arrows**: Use arrow suffix for forward actions (e.g., "Start →", "Continue →", "Start Tracking →")
+- **Macro display format**: "150g P • 200g C • 65g F"
+- **Calorie display**: "2,400 cal"
+- **Weight display**: "75.5 kg" or "166.5 lb" or "11 st 12 lb"
+
 ## Code Style
 
 - **Kotlin conventions** - Follow Kotlin coding conventions
@@ -336,6 +405,13 @@ suspend fun getFoods(query: String): Result<List<Food>> {
 - **DRY** - Extract shared logic into extension functions or utilities
 - **No unused code** - Delete dead code, don't comment it out
 - **Small functions** - Keep functions focused, extract helpers
+
+## Dependency Management
+
+- **Always use latest versions** - When adding or updating dependencies, always check for the most recent stable version. Never use outdated dependencies.
+- **Check before implementing** - Before implementing features that rely on a specific library, verify you're using the latest version and check for any API changes.
+- **Version catalog** - All dependencies are managed in `gradle/libs.versions.toml`
+- **Web search for versions** - Use web search to find the latest version of any dependency before adding or troubleshooting issues.
 
 ## Testing
 
@@ -400,9 +476,25 @@ The plugin is auto-installed via `.claude/settings.json` - no manual setup requi
    ```
    AUTH0_DOMAIN=pixelharmony.eu.auth0.com
    AUTH0_CLIENT_ID=<your-client-id>
+   AUTH0_AUDIENCE=<your-api-identifier>
    API_URL=https://api.chonkcheck.com
    ```
 5. Run on device/emulator
+
+## Running Gradle Commands
+
+When running Gradle from the command line, use `./gradlew.bat` (not `gradlew.bat` or `./gradlew`):
+
+```bash
+# Build debug APK
+./gradlew.bat assembleDebug
+
+# Run tests
+./gradlew.bat test
+
+# Run lint
+./gradlew.bat lint
+```
 
 ## Files to Know
 

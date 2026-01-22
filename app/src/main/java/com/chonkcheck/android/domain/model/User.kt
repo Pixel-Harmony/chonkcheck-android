@@ -18,7 +18,8 @@ data class UnitPreferences(
 
 enum class WeightUnit(val symbol: String) {
     KG("kg"),
-    LB("lb")
+    LB("lb"),
+    ST("st")
 }
 
 enum class HeightUnit(val symbol: String) {

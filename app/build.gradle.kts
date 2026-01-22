@@ -32,10 +32,11 @@ android {
 
         buildConfigField("String", "AUTH0_DOMAIN", "\"${localProperties.getProperty("AUTH0_DOMAIN", "")}\"")
         buildConfigField("String", "AUTH0_CLIENT_ID", "\"${localProperties.getProperty("AUTH0_CLIENT_ID", "")}\"")
+        buildConfigField("String", "AUTH0_AUDIENCE", "\"${localProperties.getProperty("AUTH0_AUDIENCE", "")}\"")
         buildConfigField("String", "API_URL", "\"${localProperties.getProperty("API_URL", "https://api.chonkcheck.com")}\"")
 
         manifestPlaceholders["auth0Domain"] = localProperties.getProperty("AUTH0_DOMAIN", "")
-        manifestPlaceholders["auth0Scheme"] = "https"
+        manifestPlaceholders["auth0Scheme"] = "com.chonkcheck.android"
         manifestPlaceholders["sentryDsn"] = localProperties.getProperty("SENTRY_DSN", "")
     }
 
