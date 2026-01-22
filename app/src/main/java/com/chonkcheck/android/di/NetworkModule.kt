@@ -3,6 +3,7 @@ package com.chonkcheck.android.di
 import com.chonkcheck.android.BuildConfig
 import com.chonkcheck.android.data.api.DiaryApi
 import com.chonkcheck.android.data.api.FoodApi
+import com.chonkcheck.android.data.api.WeightApi
 import com.chonkcheck.android.data.api.interceptor.AuthInterceptor
 import dagger.Module
 import dagger.Provides
@@ -73,4 +74,9 @@ object NetworkModule {
     @Singleton
     fun provideDiaryApi(retrofit: Retrofit): DiaryApi =
         retrofit.create(DiaryApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideWeightApi(retrofit: Retrofit): WeightApi =
+        retrofit.create(WeightApi::class.java)
 }

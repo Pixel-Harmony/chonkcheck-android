@@ -31,6 +31,7 @@ import com.chonkcheck.android.presentation.ui.foods.FoodsScreen
 import com.chonkcheck.android.presentation.ui.onboarding.OnboardingScreen
 import com.chonkcheck.android.presentation.ui.scanner.BarcodeScannerScreen
 import com.chonkcheck.android.presentation.ui.scanner.NutritionLabelScannerScreen
+import com.chonkcheck.android.presentation.ui.weight.WeightScreen
 import java.time.LocalDate
 
 @Composable
@@ -258,7 +259,7 @@ fun ChonkCheckNavHost(
             }
 
             composable(Screen.Weight.route) {
-                PlaceholderScreen("Weight")
+                WeightScreen()
             }
 
             composable(Screen.Settings.route) {
