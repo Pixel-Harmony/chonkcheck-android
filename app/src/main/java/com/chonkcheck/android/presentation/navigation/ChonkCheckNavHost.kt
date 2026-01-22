@@ -16,12 +16,18 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.chonkcheck.android.presentation.ui.auth.LoginScreen
+import com.chonkcheck.android.presentation.ui.foods.FoodFormScreen
+import com.chonkcheck.android.presentation.ui.foods.FoodsScreen
 import com.chonkcheck.android.presentation.ui.onboarding.OnboardingScreen
+import com.chonkcheck.android.presentation.ui.scanner.BarcodeScannerScreen
+import com.chonkcheck.android.presentation.ui.scanner.NutritionLabelScannerScreen
 
 @Composable
 fun ChonkCheckNavHost(
@@ -111,7 +117,94 @@ fun ChonkCheckNavHost(
             }
 
             composable(Screen.Foods.route) {
-                PlaceholderScreen("Foods")
+                FoodsScreen(
+                    onNavigateToEditFood = { foodId ->
+                        navController.navigate(Screen.EditFood.createRoute(foodId))
+                    },
+                    onNavigateToCreateFood = {
+                        navController.navigate(Screen.CreateFood.route)
+                    }
+                )
+            }
+
+            composable(Screen.CreateFood.route) { backStackEntry ->
+                // Get scanned barcode from saved state handle
+                val scannedBarcode = backStackEntry.savedStateHandle.get<String>("scanned_barcode")
+
+                // Clear the saved state after reading
+                if (scannedBarcode != null) {
+                    backStackEntry.savedStateHandle.remove<String>("scanned_barcode")
+                }
+
+                FoodFormScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToCreateOverride = { _ ->
+                        // For create screen, this shouldn't be called
+                        navController.popBackStack()
+                    },
+                    onNavigateToBarcodeScanner = {
+                        navController.navigate(Screen.BarcodeScanner.route)
+                    },
+                    onNavigateToLabelScanner = {
+                        navController.navigate(Screen.NutritionLabelScanner.route)
+                    },
+                    scannedBarcode = scannedBarcode
+                )
+            }
+
+            composable(
+                route = Screen.EditFood.route,
+                arguments = listOf(
+                    navArgument(NavArgs.FOOD_ID) { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                // Get scanned barcode from saved state handle
+                val scannedBarcode = backStackEntry.savedStateHandle.get<String>("scanned_barcode")
+
+                // Clear the saved state after reading
+                if (scannedBarcode != null) {
+                    backStackEntry.savedStateHandle.remove<String>("scanned_barcode")
+                }
+
+                FoodFormScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToCreateOverride = { overrideOfId ->
+                        // Navigate to create screen with override info
+                        // For now, just navigate to create - override functionality can be added later
+                        navController.navigate(Screen.CreateFood.route)
+                    },
+                    onNavigateToBarcodeScanner = {
+                        navController.navigate(Screen.BarcodeScanner.route)
+                    },
+                    onNavigateToLabelScanner = {
+                        navController.navigate(Screen.NutritionLabelScanner.route)
+                    },
+                    scannedBarcode = scannedBarcode
+                )
+            }
+
+            // Scanners
+            composable(Screen.BarcodeScanner.route) {
+                BarcodeScannerScreen(
+                    onBarcodeScanned = { barcode ->
+                        // Pop back and let the ViewModel handle the barcode
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("scanned_barcode", barcode)
+                        navController.popBackStack()
+                    },
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.NutritionLabelScanner.route) {
+                NutritionLabelScannerScreen(
+                    onLabelScanned = { nutritionData ->
+                        // TODO: Pass nutrition data back when API is implemented
+                        navController.popBackStack()
+                    },
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
 
             composable(Screen.Recipes.route) {
@@ -130,7 +223,7 @@ fun ChonkCheckNavHost(
                 PlaceholderScreen("Settings")
             }
 
-            // Detail screens will be added in later phases
+            // Additional detail screens will be added in later phases
         }
     }
 }

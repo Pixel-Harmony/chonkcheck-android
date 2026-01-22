@@ -477,7 +477,7 @@ The plugin is auto-installed via `.claude/settings.json` - no manual setup requi
    AUTH0_DOMAIN=pixelharmony.eu.auth0.com
    AUTH0_CLIENT_ID=<your-client-id>
    AUTH0_AUDIENCE=<your-api-identifier>
-   API_URL=https://api.chonkcheck.com
+   API_URL=https://app.chonkcheck.com/api/
    ```
 5. Run on device/emulator
 

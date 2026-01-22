@@ -35,7 +35,7 @@ Native Android calorie tracking app built with Kotlin and Jetpack Compose.
    ```properties
    AUTH0_DOMAIN=pixelharmony.eu.auth0.com
    AUTH0_CLIENT_ID=<your-client-id>
-   API_URL=https://api.chonkcheck.com
+   API_URL=https://app.chonkcheck.com/api/
    ```
 5. Run on device/emulator
 
@@ -54,7 +54,7 @@ git clone https://github.com/Pixel-Harmony/chonkcheck-claude-skills.git
 
 The backend API documentation is available at:
 - OpenAPI spec: `apps/backend/openapi.yaml` (in main ChonkCheck repo)
-- Swagger UI: https://api.chonkcheck.com/docs
+- Swagger UI: https://app.chonkcheck.com/api/docs
 
 ## License
 

@@ -20,8 +20,8 @@ Build the ChonkCheck Android app from scratch to achieve full feature parity wit
 | 3 | Room Database Schema & Entities | ✅ Complete |
 | 4 | Authentication with Auth0 | ✅ Complete |
 | 5 | Onboarding Flow | ✅ Complete |
-| 6 | Foods Core - Data Layer | ⏳ Pending |
-| 7 | Foods Core - UI Layer | ⏳ Pending |
+| 6 | Foods Core - Data Layer | ✅ Complete |
+| 7 | Foods Core - UI Layer | ✅ Complete |
 | 8 | Barcode Scanning | ⏳ Pending |
 | 9 | Diary Core | ⏳ Pending |
 | 10 | Weight Tracking | ⏳ Pending |
@@ -157,7 +157,7 @@ presentation/ui/onboarding/
 
 ---
 
-### Phase 6: Foods Core - Data Layer ⏳
+### Phase 6: Foods Core - Data Layer ✅
 
 **Goal**: Implement Foods feature data layer with offline-first pattern.
 
@@ -213,7 +213,7 @@ domain/usecase/SearchFoodsUseCase.kt, GetFoodByIdUseCase.kt, CreateUserFoodUseCa
 
 ---
 
-### Phase 7: Foods Core - UI Layer ⏳
+### Phase 7: Foods Core - UI Layer ✅
 
 **Goal**: Build Foods screens with search, filtering, and CRUD.
 
@@ -308,13 +308,13 @@ domain/usecase/SearchFoodsUseCase.kt, GetFoodByIdUseCase.kt, CreateUserFoodUseCa
 - Override: "Think your corrections should replace the platform version? Submit as a revision for review."
 - Button: "Submit to ChonkCheck" / "Submit Revision"
 
-**Files to Create**:
+**Files Created**:
 ```
 presentation/ui/foods/
   FoodsScreen.kt, FoodsViewModel.kt
-  FoodDetailSheet.kt
-  CreateFoodScreen.kt, CreateFoodViewModel.kt
-  components/FoodCard.kt, FoodSearchBar.kt, FoodFilterChips.kt, NutritionFactsCard.kt
+  FoodFormScreen.kt, FoodFormViewModel.kt (combined create/edit form)
+  components/FoodCard.kt, FoodSearchBar.kt, FoodFilterChips.kt, FoodsEmptyState.kt
+presentation/navigation/ChonkCheckNavHost.kt (updated with Foods routes)
 ```
 
 ---
