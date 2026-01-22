@@ -8,10 +8,14 @@ val ChonkGreenLight = Color(0xFF4ADE80) // Green 400
 val ChonkGreenDark = Color(0xFF16A34A) // Green 600
 
 // Accent colors
-val Coral = Color(0xFFF97316) // Orange 500
+val Coral = Color(0xFFFF6347) // Coral 500
+val CoralLight = Color(0xFFFF8B73) // Coral 400
 val Amber = Color(0xFFF59E0B) // Amber 500
+val AmberLight = Color(0xFFFBBF24) // Amber 400
 val Teal = Color(0xFF14B8A6) // Teal 500
-val Purple = Color(0xFF8B5CF6) // Violet 500
+val TealLight = Color(0xFF2DD4BF) // Teal 400
+val Purple = Color(0xFFA855F7) // Purple 500
+val PurpleLight = Color(0xFFC084FC) // Purple 400
 
 // Light theme colors
 val md_theme_light_primary = ChonkGreen

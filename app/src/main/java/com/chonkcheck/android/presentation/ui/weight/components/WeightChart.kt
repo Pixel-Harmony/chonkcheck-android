@@ -18,7 +18,7 @@ import com.chonkcheck.android.domain.model.WeightChartPoint
 import com.chonkcheck.android.domain.model.WeightUnit
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.ChonkGreen
-import com.chonkcheck.android.ui.theme.Teal
+import com.chonkcheck.android.ui.theme.Coral
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
@@ -120,7 +120,7 @@ fun WeightChart(
     // Create dashed line for trend
     val dashedTrendLine = remember {
         DashedLine(
-            fill = LineCartesianLayer.LineFill.single(fill(Teal)),
+            fill = LineCartesianLayer.LineFill.single(fill(Coral)),
             dashLength = 10f,
             gapLength = 10f
         )
@@ -184,7 +184,7 @@ private class DashedLine(
     fill: LineCartesianLayer.LineFill,
     dashLength: Float,
     gapLength: Float
-) : LineCartesianLayer.Line(fill) {
+) : LineCartesianLayer.Line(fill, areaFill = null) {
     init {
         linePaint.pathEffect = DashPathEffect(floatArrayOf(dashLength, gapLength), 0f)
     }

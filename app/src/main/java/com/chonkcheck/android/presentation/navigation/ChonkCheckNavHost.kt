@@ -1,5 +1,6 @@
 package com.chonkcheck.android.presentation.navigation
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -7,6 +8,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.chonkcheck.android.domain.model.MealType
 import com.chonkcheck.android.presentation.ui.auth.LoginScreen
+import com.chonkcheck.android.presentation.ui.dashboard.DashboardScreen
 import com.chonkcheck.android.presentation.ui.diary.DiaryScreen
 import com.chonkcheck.android.presentation.ui.diary.addentry.AddDiaryEntryScreen
 import com.chonkcheck.android.presentation.ui.foods.FoodFormScreen
@@ -45,10 +48,12 @@ fun ChonkCheckNavHost(
     val bottomBarScreens = listOf(
         BottomNavItem.Dashboard,
         BottomNavItem.Diary,
-        BottomNavItem.Foods,
         BottomNavItem.Weight,
+        BottomNavItem.Foods,
         BottomNavItem.Settings
     )
+
+    val isDarkTheme = isSystemInDarkTheme()
 
     val showBottomBar = currentDestination?.route in bottomBarScreens.map { it.screen.route }
 
@@ -57,10 +62,13 @@ fun ChonkCheckNavHost(
             if (showBottomBar) {
                 NavigationBar {
                     bottomBarScreens.forEach { item ->
+                        val isSelected = currentDestination?.hierarchy?.any { it.route == item.screen.route } == true
+                        val activeColor = if (isDarkTheme) item.activeColorDark else item.activeColorLight
+
                         NavigationBarItem(
                             icon = {
                                 Icon(
-                                    imageVector = if (currentDestination?.hierarchy?.any { it.route == item.screen.route } == true) {
+                                    imageVector = if (isSelected) {
                                         item.selectedIcon
                                     } else {
                                         item.unselectedIcon
@@ -69,14 +77,20 @@ fun ChonkCheckNavHost(
                                 )
                             },
                             label = { Text(item.label) },
-                            selected = currentDestination?.hierarchy?.any { it.route == item.screen.route } == true,
+                            selected = isSelected,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = activeColor,
+                                selectedTextColor = activeColor,
+                                indicatorColor = activeColor.copy(alpha = 0.12f)
+                            ),
                             onClick = {
+                                val isStartDestination = item.screen.route == Screen.Dashboard.route
                                 navController.navigate(item.screen.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                                        saveState = !isStartDestination
                                     }
                                     launchSingleTop = true
-                                    restoreState = true
+                                    restoreState = !isStartDestination
                                 }
                             }
                         )
@@ -114,7 +128,18 @@ fun ChonkCheckNavHost(
 
             // Main screens
             composable(Screen.Dashboard.route) {
-                PlaceholderScreen("Dashboard")
+                DashboardScreen(
+                    onNavigateToDiary = { navController.navigate(Screen.Diary.route) },
+                    onNavigateToAddFood = {
+                        navController.navigate(
+                            Screen.DiaryAddEntry.createRoute(
+                                LocalDate.now().toString(),
+                                MealType.SNACKS.apiValue
+                            )
+                        )
+                    },
+                    onNavigateToWeight = { navController.navigate(Screen.Weight.route) }
+                )
             }
 
             composable(Screen.Diary.route) {
