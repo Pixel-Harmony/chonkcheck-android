@@ -12,6 +12,7 @@ import com.chonkcheck.android.data.db.dao.SavedMealDao
 import com.chonkcheck.android.data.db.dao.SyncQueueDao
 import com.chonkcheck.android.data.db.dao.UserDao
 import com.chonkcheck.android.data.db.dao.WeightDao
+import com.chonkcheck.android.data.db.entity.DayCompletionEntity
 import com.chonkcheck.android.data.db.entity.DiaryEntryEntity
 import com.chonkcheck.android.data.db.entity.ExerciseEntryEntity
 import com.chonkcheck.android.data.db.entity.FoodEntity
@@ -26,13 +27,14 @@ import com.chonkcheck.android.data.db.entity.WeightEntryEntity
         UserEntity::class,
         FoodEntity::class,
         DiaryEntryEntity::class,
+        DayCompletionEntity::class,
         RecipeEntity::class,
         SavedMealEntity::class,
         WeightEntryEntity::class,
         ExerciseEntryEntity::class,
         SyncQueueEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

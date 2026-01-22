@@ -1,0 +1,228 @@
+package com.chonkcheck.android.presentation.ui.diary.addentry
+
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.chonkcheck.android.domain.model.CreateDiaryEntryParams
+import com.chonkcheck.android.domain.model.Food
+import com.chonkcheck.android.domain.model.FoodFilter
+import com.chonkcheck.android.domain.model.FoodFilterType
+import com.chonkcheck.android.domain.model.MealType
+import com.chonkcheck.android.domain.model.ServingUnit
+import com.chonkcheck.android.domain.usecase.CreateDiaryEntryUseCase
+import com.chonkcheck.android.domain.usecase.SearchFoodsUseCase
+import com.chonkcheck.android.presentation.navigation.NavArgs
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import javax.inject.Inject
+import kotlin.math.roundToInt
+
+enum class AddEntryPhase {
+    SEARCH,
+    DETAILS,
+    SAVING
+}
+
+data class AddDiaryEntryUiState(
+    val date: LocalDate = LocalDate.now(),
+    val mealType: MealType = MealType.BREAKFAST,
+    val phase: AddEntryPhase = AddEntryPhase.SEARCH,
+
+    // Search phase
+    val searchQuery: String = "",
+    val searchResults: List<Food> = emptyList(),
+    val isSearching: Boolean = false,
+    val recentFoods: List<Food> = emptyList(),
+
+    // Details phase
+    val selectedFood: Food? = null,
+    val servingSize: Double = 0.0,
+    val servingUnit: ServingUnit = ServingUnit.GRAM,
+    val numberOfServings: Double = 1.0,
+
+    // Calculated values
+    val calculatedCalories: Double = 0.0,
+    val calculatedProtein: Double = 0.0,
+    val calculatedCarbs: Double = 0.0,
+    val calculatedFat: Double = 0.0,
+
+    // Error handling
+    val error: String? = null,
+    val isSaving: Boolean = false
+)
+
+sealed class AddDiaryEntryEvent {
+    data object EntrySaved : AddDiaryEntryEvent()
+    data object NavigateBack : AddDiaryEntryEvent()
+    data class ShowError(val message: String) : AddDiaryEntryEvent()
+}
+
+@HiltViewModel
+class AddDiaryEntryViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val searchFoodsUseCase: SearchFoodsUseCase,
+    private val createDiaryEntryUseCase: CreateDiaryEntryUseCase
+) : ViewModel() {
+
+    private val dateString: String = savedStateHandle.get<String>(NavArgs.DATE) ?: LocalDate.now().toString()
+    private val mealTypeString: String = savedStateHandle.get<String>("mealType") ?: MealType.BREAKFAST.apiValue
+
+    private val _uiState = MutableStateFlow(AddDiaryEntryUiState(
+        date = LocalDate.parse(dateString),
+        mealType = MealType.fromApiValue(mealTypeString)
+    ))
+    val uiState: StateFlow<AddDiaryEntryUiState> = _uiState.asStateFlow()
+
+    private val _events = MutableStateFlow<AddDiaryEntryEvent?>(null)
+    val events: StateFlow<AddDiaryEntryEvent?> = _events.asStateFlow()
+
+    private var searchJob: Job? = null
+
+    init {
+        loadRecentFoods()
+    }
+
+    private fun loadRecentFoods() {
+        searchFoodsUseCase(FoodFilter(query = "", type = FoodFilterType.ALL, limit = 10))
+            .onEach { foods ->
+                _uiState.update { it.copy(recentFoods = foods) }
+            }
+            .catch { /* Ignore errors for recent foods */ }
+            .launchIn(viewModelScope)
+    }
+
+    fun onSearchQueryChange(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+
+        // Debounce search
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            if (query.isBlank()) {
+                _uiState.update { it.copy(searchResults = emptyList(), isSearching = false) }
+                return@launch
+            }
+
+            delay(300) // Debounce
+            _uiState.update { it.copy(isSearching = true) }
+
+            searchFoodsUseCase(FoodFilter(query = query, type = FoodFilterType.ALL, limit = 50))
+                .onEach { foods ->
+                    _uiState.update { it.copy(searchResults = foods, isSearching = false) }
+                }
+                .catch { error ->
+                    _uiState.update { it.copy(isSearching = false, error = error.message) }
+                }
+                .launchIn(this)
+        }
+    }
+
+    fun onFoodSelected(food: Food) {
+        _uiState.update {
+            it.copy(
+                phase = AddEntryPhase.DETAILS,
+                selectedFood = food,
+                servingSize = food.servingSize,
+                servingUnit = food.servingUnit,
+                numberOfServings = 1.0
+            )
+        }
+        recalculateNutrition()
+    }
+
+    fun onServingSizeChange(size: String) {
+        val sizeValue = size.toDoubleOrNull() ?: return
+        _uiState.update { it.copy(servingSize = sizeValue) }
+        recalculateNutrition()
+    }
+
+    fun onServingUnitChange(unit: ServingUnit) {
+        _uiState.update { it.copy(servingUnit = unit) }
+    }
+
+    fun onNumberOfServingsChange(servings: String) {
+        val servingsValue = servings.toDoubleOrNull() ?: return
+        _uiState.update { it.copy(numberOfServings = servingsValue) }
+        recalculateNutrition()
+    }
+
+    fun onMealTypeChange(mealType: MealType) {
+        _uiState.update { it.copy(mealType = mealType) }
+    }
+
+    private fun recalculateNutrition() {
+        val state = _uiState.value
+        val food = state.selectedFood ?: return
+
+        val multiplier = (state.servingSize / food.servingSize) * state.numberOfServings
+
+        _uiState.update {
+            it.copy(
+                calculatedCalories = food.calories * multiplier,
+                calculatedProtein = food.protein * multiplier,
+                calculatedCarbs = food.carbs * multiplier,
+                calculatedFat = food.fat * multiplier
+            )
+        }
+    }
+
+    fun onBackToSearch() {
+        _uiState.update {
+            it.copy(
+                phase = AddEntryPhase.SEARCH,
+                selectedFood = null
+            )
+        }
+    }
+
+    fun onSave() {
+        val state = _uiState.value
+        val food = state.selectedFood ?: return
+
+        _uiState.update { it.copy(isSaving = true) }
+
+        viewModelScope.launch {
+            val params = CreateDiaryEntryParams(
+                date = state.date,
+                mealType = state.mealType,
+                foodId = food.id,
+                recipeId = null,
+                servingSize = state.servingSize,
+                servingUnit = state.servingUnit,
+                numberOfServings = state.numberOfServings
+            )
+
+            createDiaryEntryUseCase(params)
+                .onSuccess {
+                    _events.value = AddDiaryEntryEvent.EntrySaved
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isSaving = false) }
+                    _events.value = AddDiaryEntryEvent.ShowError(
+                        error.message ?: "Failed to save entry"
+                    )
+                }
+        }
+    }
+
+    fun onCancel() {
+        _events.value = AddDiaryEntryEvent.NavigateBack
+    }
+
+    fun onEventConsumed() {
+        _events.value = null
+    }
+
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
+    }
+}

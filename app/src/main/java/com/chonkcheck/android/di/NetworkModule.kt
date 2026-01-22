@@ -1,6 +1,7 @@
 package com.chonkcheck.android.di
 
 import com.chonkcheck.android.BuildConfig
+import com.chonkcheck.android.data.api.DiaryApi
 import com.chonkcheck.android.data.api.FoodApi
 import com.chonkcheck.android.data.api.interceptor.AuthInterceptor
 import dagger.Module
@@ -67,4 +68,9 @@ object NetworkModule {
     @Singleton
     fun provideFoodApi(retrofit: Retrofit): FoodApi =
         retrofit.create(FoodApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideDiaryApi(retrofit: Retrofit): DiaryApi =
+        retrofit.create(DiaryApi::class.java)
 }

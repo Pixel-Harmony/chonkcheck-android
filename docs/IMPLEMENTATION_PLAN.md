@@ -22,8 +22,8 @@ Build the ChonkCheck Android app from scratch to achieve full feature parity wit
 | 5 | Onboarding Flow | ✅ Complete |
 | 6 | Foods Core - Data Layer | ✅ Complete |
 | 7 | Foods Core - UI Layer | ✅ Complete |
-| 8 | Barcode Scanning | ⏳ Pending |
-| 9 | Diary Core | ⏳ Pending |
+| 8 | Barcode Scanning | ✅ Complete |
+| 9 | Diary Core | ✅ Complete |
 | 10 | Weight Tracking | ⏳ Pending |
 | 11 | Recipes Feature | ⏳ Pending |
 | 12 | Saved Meals | ⏳ Pending |
@@ -319,7 +319,7 @@ presentation/navigation/ChonkCheckNavHost.kt (updated with Foods routes)
 
 ---
 
-### Phase 8: Barcode Scanning ⏳
+### Phase 8: Barcode Scanning ✅
 
 **Goal**: Integrate ML Kit for barcode scanning.
 
@@ -353,7 +353,7 @@ presentation/util/PermissionHandler.kt
 
 ---
 
-### Phase 9: Diary Core ⏳
+### Phase 9: Diary Core ✅
 
 **Goal**: Build the diary feature - the heart of the app.
 

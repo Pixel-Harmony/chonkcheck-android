@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.chonkcheck.android.data.db.entity.DayCompletionEntity
 import com.chonkcheck.android.data.db.entity.DiaryEntryEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -85,6 +86,19 @@ interface DiaryDao {
 
     @Query("DELETE FROM diary_entries WHERE userId = :userId AND date = :date")
     suspend fun deleteAllForDate(userId: String, date: String)
+
+    // Day completion queries
+    @Query("SELECT * FROM day_completions WHERE userId = :userId AND date = :date")
+    fun getDayCompletion(userId: String, date: String): Flow<DayCompletionEntity?>
+
+    @Query("SELECT * FROM day_completions WHERE userId = :userId AND date = :date")
+    suspend fun getDayCompletionOnce(userId: String, date: String): DayCompletionEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDayCompletion(completion: DayCompletionEntity)
+
+    @Query("DELETE FROM day_completions WHERE userId = :userId AND date = :date")
+    suspend fun deleteDayCompletion(userId: String, date: String)
 }
 
 data class DailySummaryResult(

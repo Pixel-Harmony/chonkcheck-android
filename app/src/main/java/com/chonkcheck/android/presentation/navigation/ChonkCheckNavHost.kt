@@ -22,12 +22,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.chonkcheck.android.domain.model.MealType
 import com.chonkcheck.android.presentation.ui.auth.LoginScreen
+import com.chonkcheck.android.presentation.ui.diary.DiaryScreen
+import com.chonkcheck.android.presentation.ui.diary.addentry.AddDiaryEntryScreen
 import com.chonkcheck.android.presentation.ui.foods.FoodFormScreen
 import com.chonkcheck.android.presentation.ui.foods.FoodsScreen
 import com.chonkcheck.android.presentation.ui.onboarding.OnboardingScreen
 import com.chonkcheck.android.presentation.ui.scanner.BarcodeScannerScreen
 import com.chonkcheck.android.presentation.ui.scanner.NutritionLabelScannerScreen
+import java.time.LocalDate
 
 @Composable
 fun ChonkCheckNavHost(
@@ -113,7 +117,18 @@ fun ChonkCheckNavHost(
             }
 
             composable(Screen.Diary.route) {
-                PlaceholderScreen("Diary")
+                DiaryScreen(
+                    onNavigateToAddFood = { date, mealType ->
+                        navController.navigate(
+                            Screen.DiaryAddEntry.createRoute(date.toString(), mealType.apiValue)
+                        )
+                    },
+                    onNavigateToEditEntry = { entryId ->
+                        navController.navigate(
+                            Screen.DiaryEditEntry.createRoute(entryId)
+                        )
+                    }
+                )
             }
 
             composable(Screen.Foods.route) {
@@ -205,6 +220,33 @@ fun ChonkCheckNavHost(
                     },
                     onNavigateBack = { navController.popBackStack() }
                 )
+            }
+
+            // Diary entry screens
+            composable(
+                route = Screen.DiaryAddEntry.route,
+                arguments = listOf(
+                    navArgument(NavArgs.DATE) { type = NavType.StringType },
+                    navArgument(NavArgs.MEAL_TYPE) { type = NavType.StringType }
+                )
+            ) {
+                AddDiaryEntryScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToBarcodeScanner = {
+                        navController.navigate(Screen.BarcodeScanner.route)
+                    },
+                    onFoodAdded = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Screen.DiaryEditEntry.route,
+                arguments = listOf(
+                    navArgument(NavArgs.ENTRY_ID) { type = NavType.StringType }
+                )
+            ) {
+                // TODO: Implement EditDiaryEntryScreen
+                PlaceholderScreen("Edit Entry")
             }
 
             composable(Screen.Recipes.route) {

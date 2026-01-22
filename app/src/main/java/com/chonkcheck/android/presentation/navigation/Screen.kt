@@ -38,6 +38,14 @@ sealed class Screen(val route: String) {
     }
     data object CreateSavedMeal : Screen("saved_meal/create")
 
+    // Diary entry screens
+    data object DiaryAddEntry : Screen("diary/add/{date}/{mealType}") {
+        fun createRoute(date: String, mealType: String) = "diary/add/$date/$mealType"
+    }
+    data object DiaryEditEntry : Screen("diary/edit/{entryId}") {
+        fun createRoute(entryId: String) = "diary/edit/$entryId"
+    }
+
     // Scanners
     data object BarcodeScanner : Screen("scanner/barcode")
     data object NutritionLabelScanner : Screen("scanner/nutrition_label")
@@ -53,4 +61,6 @@ object NavArgs {
     const val RECIPE_ID = "recipeId"
     const val SAVED_MEAL_ID = "savedMealId"
     const val DATE = "date"
+    const val MEAL_TYPE = "mealType"
+    const val ENTRY_ID = "entryId"
 }
