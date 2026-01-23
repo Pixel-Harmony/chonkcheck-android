@@ -137,14 +137,14 @@ class DiaryRepositoryImpl @Inject constructor(
             val existingEntry = diaryDao.getEntryByIdOnce(id)
                 ?: return Result.failure(IllegalArgumentException("Entry not found"))
 
-            // Update locally first
+            // Update locally (API doesn't support PUT for diary entries)
             val updatedEntity = existingEntry.copy(
                 mealType = params.mealType?.apiValue ?: existingEntry.mealType,
                 servingSize = params.servingSize ?: existingEntry.servingSize,
                 servingUnit = params.servingUnit?.name?.lowercase() ?: existingEntry.servingUnit,
                 numberOfServings = params.numberOfServings ?: existingEntry.numberOfServings,
                 updatedAt = System.currentTimeMillis(),
-                syncedAt = null // Mark as needing sync
+                syncedAt = null // Local-only update
             ).let { entity ->
                 // Recalculate nutrition if serving changed
                 if (params.servingSize != null || params.numberOfServings != null) {
@@ -168,17 +168,7 @@ class DiaryRepositoryImpl @Inject constructor(
             }
 
             diaryDao.update(updatedEntity)
-
-            // Try to sync with API
-            try {
-                val response = diaryApi.updateDiaryEntry(id, params.toRequest())
-                val syncedEntity = response.toEntity(existingEntry.userId)
-                diaryDao.update(syncedEntity)
-                Result.success(syncedEntity.toDomain())
-            } catch (apiError: Exception) {
-                Sentry.captureException(apiError)
-                Result.success(updatedEntity.toDomain())
-            }
+            Result.success(updatedEntity.toDomain())
         } catch (e: Exception) {
             Sentry.captureException(e)
             Result.failure(e)

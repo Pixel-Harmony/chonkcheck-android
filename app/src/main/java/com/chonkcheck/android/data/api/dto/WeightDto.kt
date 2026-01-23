@@ -4,23 +4,23 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class WeightEntriesResponse(
-    val entries: List<WeightEntryDto>
+    val weights: List<WeightEntryDto>,
+    val count: Int? = null
 )
 
 @Serializable
 data class WeightEntryDto(
-    val id: String,
-    val userId: String,
     val date: String,
-    val weight: Double, // kg
+    val weight: Double,
+    val unit: String,
     val notes: String? = null,
-    val createdAt: String,
-    val updatedAt: String? = null
+    val createdAt: String? = null
 )
 
 @Serializable
 data class CreateWeightRequest(
+    val weight: Double,
     val date: String,
-    val weight: Double, // kg
+    val unit: String? = null,
     val notes: String? = null
 )

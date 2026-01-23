@@ -2,13 +2,11 @@ package com.chonkcheck.android.data.mappers
 
 import com.chonkcheck.android.data.api.dto.CreateDiaryEntryRequest
 import com.chonkcheck.android.data.api.dto.DiaryEntryDto
-import com.chonkcheck.android.data.api.dto.UpdateDiaryEntryRequest
 import com.chonkcheck.android.data.db.entity.DiaryEntryEntity
 import com.chonkcheck.android.domain.model.CreateDiaryEntryParams
 import com.chonkcheck.android.domain.model.DiaryEntry
 import com.chonkcheck.android.domain.model.MealType
 import com.chonkcheck.android.domain.model.ServingUnit
-import com.chonkcheck.android.domain.model.UpdateDiaryEntryParams
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -24,10 +22,10 @@ fun DiaryEntryDto.toEntity(userId: String): DiaryEntryEntity = DiaryEntryEntity(
     servingSize = quantity,
     servingUnit = food?.servingUnit ?: savedRecipe?.servingUnit ?: "serving",
     numberOfServings = 1.0,
-    calories = nutrition.calories,
-    protein = nutrition.protein,
-    carbs = nutrition.carbs,
-    fat = nutrition.fat,
+    calories = calories,
+    protein = protein,
+    carbs = carbs,
+    fat = fat,
     name = name,
     brand = brand,
     syncedAt = System.currentTimeMillis(),
@@ -80,20 +78,13 @@ fun CreateDiaryEntryParams.toEntity(
 }
 
 fun CreateDiaryEntryParams.toRequest(): CreateDiaryEntryRequest = CreateDiaryEntryRequest(
-    date = date.toApiDate(),
-    meal = mealType.apiValue,
     foodId = foodId,
     recipeId = recipeId,
-    quantity = (servingSize / foodServingSize) * numberOfServings // Number of servings, not raw grams
-)
-
-fun UpdateDiaryEntryParams.toRequest(): UpdateDiaryEntryRequest = UpdateDiaryEntryRequest(
-    meal = mealType?.apiValue,
-    quantity = if (servingSize != null && numberOfServings != null) {
-        servingSize * numberOfServings
-    } else {
-        servingSize ?: numberOfServings
-    }
+    itemType = if (foodId != null) "food" else if (recipeId != null) "recipe" else null,
+    quantity = (servingSize / foodServingSize) * numberOfServings, // Number of servings, not raw grams
+    date = date.toApiDate(),
+    meal = mealType.apiValue,
+    enteredAmount = servingSize
 )
 
 private fun String.toServingUnit(): ServingUnit = when (this.lowercase()) {

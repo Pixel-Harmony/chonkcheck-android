@@ -10,15 +10,15 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
-fun WeightEntryDto.toEntity(): WeightEntryEntity = WeightEntryEntity(
-    id = id,
+fun WeightEntryDto.toEntity(userId: String): WeightEntryEntity = WeightEntryEntity(
+    id = "weight_${date}_${userId}",
     userId = userId,
     date = date,
     weight = weight,
     notes = notes,
     syncedAt = System.currentTimeMillis(),
-    createdAt = createdAt.parseTimestamp() ?: System.currentTimeMillis(),
-    updatedAt = updatedAt?.parseTimestamp() ?: System.currentTimeMillis()
+    createdAt = createdAt?.parseTimestamp() ?: System.currentTimeMillis(),
+    updatedAt = System.currentTimeMillis()
 )
 
 fun WeightEntryEntity.toDomain(): WeightEntry = WeightEntry(

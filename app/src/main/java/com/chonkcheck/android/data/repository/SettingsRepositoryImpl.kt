@@ -19,6 +19,8 @@ import com.chonkcheck.android.domain.model.WeightUnit
 import com.chonkcheck.android.domain.repository.SettingsRepository
 import io.sentry.Sentry
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.time.LocalDate
 import java.time.Period
 import javax.inject.Inject
@@ -169,7 +171,8 @@ class SettingsRepositoryImpl @Inject constructor(
     override suspend fun exportUserData(): Result<String> {
         return try {
             val response = userApi.exportUserData()
-            Result.success(response.data)
+            val json = Json { prettyPrint = true }
+            Result.success(json.encodeToString(response))
         } catch (e: Exception) {
             Log.e(TAG, "Failed to export user data", e)
             Sentry.captureException(e)

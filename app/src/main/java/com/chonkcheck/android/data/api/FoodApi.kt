@@ -18,8 +18,8 @@ interface FoodApi {
     suspend fun listFoods(
         @Query("search") search: String? = null,
         @Query("type") type: String? = null,
-        @Query("include_recipes") includeRecipes: Boolean = false,
-        @Query("include_meals") includeMeals: Boolean = false,
+        @Query("includeRecipes") includeRecipes: Boolean = false,
+        @Query("includeMeals") includeMeals: Boolean = false,
         @Query("limit") limit: Int = 50
     ): FoodsResponse
 

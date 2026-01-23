@@ -30,22 +30,22 @@ fun RecipeDto.toEntity(): RecipeEntity {
         userId = userId,
         name = name,
         description = description,
-        imageUrl = imageUrl,
-        servings = servings,
-        servingSize = servingSize,
+        imageUrl = null,
+        servings = totalServings.toInt(),
+        servingSize = null,
         servingUnit = servingUnit,
         caloriesPerServing = caloriesPerServing,
         proteinPerServing = proteinPerServing,
         carbsPerServing = carbsPerServing,
         fatPerServing = fatPerServing,
         ingredientsJson = ingredientsJson,
-        instructions = instructions,
-        prepTimeMinutes = prepTimeMinutes,
-        cookTimeMinutes = cookTimeMinutes,
+        instructions = null,
+        prepTimeMinutes = null,
+        cookTimeMinutes = null,
         syncedAt = System.currentTimeMillis(),
         createdAt = createdAt.parseTimestamp() ?: System.currentTimeMillis(),
-        updatedAt = updatedAt?.parseTimestamp() ?: System.currentTimeMillis(),
-        deletedAt = null
+        updatedAt = updatedAt.parseTimestamp() ?: System.currentTimeMillis(),
+        deletedAt = if (archivedAt != null) archivedAt.parseTimestamp() else null
     )
 }
 
@@ -53,9 +53,9 @@ fun RecipeIngredientDto.toIngredientJson(): RecipeIngredientJson {
     return RecipeIngredientJson(
         foodId = foodId,
         foodName = foodName,
-        servingSize = servingSize,
-        servingUnit = servingUnit,
-        numberOfServings = numberOfServings,
+        servingSize = 1.0, // Base serving
+        servingUnit = "serving",
+        numberOfServings = quantity,
         calories = calories,
         protein = protein,
         carbs = carbs,
@@ -116,7 +116,7 @@ fun CreateRecipeParams.toRequest(): CreateRecipeRequest {
     return CreateRecipeRequest(
         name = name,
         description = description,
-        totalServings = totalServings,
+        totalServings = totalServings.toDouble(),
         servingUnit = servingUnit.toApiValue(),
         ingredients = ingredients.map { it.toRequest() }
     )
@@ -134,7 +134,7 @@ fun UpdateRecipeParams.toRequest(): UpdateRecipeRequest {
     return UpdateRecipeRequest(
         name = name,
         description = description,
-        totalServings = totalServings,
+        totalServings = totalServings?.toDouble(),
         servingUnit = servingUnit?.toApiValue(),
         ingredients = ingredients?.map { it.toRequest() }
     )

@@ -67,7 +67,7 @@ class WeightRepositoryImpl @Inject constructor(
                 // Try to sync with API
                 try {
                     val response = weightApi.createWeightEntry(params.toRequest())
-                    val syncedEntity = response.toEntity()
+                    val syncedEntity = response.toEntity(currentUser.id)
                     weightDao.update(syncedEntity)
                     Result.success(syncedEntity.toDomain())
                 } catch (apiError: Exception) {
@@ -83,7 +83,7 @@ class WeightRepositoryImpl @Inject constructor(
                 // Try to sync with API
                 try {
                     val response = weightApi.createWeightEntry(params.toRequest())
-                    val syncedEntity = response.toEntity()
+                    val syncedEntity = response.toEntity(currentUser.id)
 
                     // Replace temp entity with synced entity
                     weightDao.delete(tempId)
@@ -130,7 +130,7 @@ class WeightRepositoryImpl @Inject constructor(
             val currentUser = authRepository.currentUser.first() ?: return
 
             val response = weightApi.getWeightEntries()
-            val entities = response.entries.map { it.toEntity() }
+            val entities = response.weights.map { it.toEntity(currentUser.id) }
 
             // Update local database with fresh data
             weightDao.insertAll(entities)
