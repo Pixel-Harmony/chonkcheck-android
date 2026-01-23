@@ -104,7 +104,20 @@ fun DiaryScreen(viewModel: DiaryViewModel = hiltViewModel()) {
 
 ## API Integration
 
-The backend API is documented in OpenAPI format at `apps/backend/openapi.yaml` in the main ChonkCheck repo.
+> **MANDATORY: OpenAPI Specification Reference**
+>
+> The backend API is fully documented in OpenAPI format at:
+> ```
+> ../chonkcheck/apps/backend/openapi.yaml
+> ```
+>
+> **Before implementing ANY API integration, you MUST:**
+> 1. Read the OpenAPI spec to verify endpoint paths (e.g., `/user/profile` not `/user`)
+> 2. Check request body schemas for correct field names and types
+> 3. Verify response schemas for proper DTO mapping
+> 4. Check enum values (e.g., activity levels: `sedentary`, `light`, `moderate`, `active`, `very_active`)
+>
+> **DO NOT assume endpoint paths or schemas. The web app at `../chonkcheck` uses the same API and can serve as a reference for correct usage.**
 
 ### Key Endpoints
 
@@ -119,6 +132,29 @@ The backend API is documented in OpenAPI format at `apps/backend/openapi.yaml` i
 | `GET /weight` | Weight history |
 | `POST /weight` | Log weight |
 | `PATCH /user/onboarding` | Complete onboarding |
+| `GET /user/profile` | Get user profile |
+| `PUT /user/profile` | Update user profile and goals |
+| `GET /user/data-export` | Export user data (GDPR) |
+| `DELETE /user/account` | Delete account (GDPR) |
+
+### API Contract: Diary Entry Quantity
+
+> **CRITICAL**: The `quantity` field in diary entry requests represents **NUMBER OF SERVINGS**, not total grams.
+
+**Correct calculation:**
+```kotlin
+quantity = (userEnteredAmount / food.servingSize) * numberOfServings
+```
+
+**Examples:**
+- Log 150g of food with 100g serving: `quantity = 1.5`
+- Log 2 servings of the base serving size: `quantity = 2`
+
+**NEVER:**
+- Send raw grams as quantity
+- Use `servingSize * numberOfServings`
+
+The backend calculates nutrition as: `calories = food.calories * quantity`. Sending wrong quantity values will corrupt nutrition data.
 
 ### Authentication
 

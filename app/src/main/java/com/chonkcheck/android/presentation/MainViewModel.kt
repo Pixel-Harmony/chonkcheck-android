@@ -3,7 +3,9 @@ package com.chonkcheck.android.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chonkcheck.android.domain.model.AuthState
+import com.chonkcheck.android.domain.model.ThemePreference
 import com.chonkcheck.android.domain.repository.AuthRepository
+import com.chonkcheck.android.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,8 +23,16 @@ sealed interface AppStartupState {
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
+
+    val themePreference: StateFlow<ThemePreference> = settingsRepository.themePreference
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = ThemePreference.SYSTEM
+        )
 
     val startupState: StateFlow<AppStartupState> = authRepository.authState
         .map { authState ->

@@ -104,7 +104,8 @@ data class CreateDiaryEntryParams(
     val recipeId: String?,
     val servingSize: Double,
     val servingUnit: ServingUnit,
-    val numberOfServings: Double
+    val numberOfServings: Double,
+    val foodServingSize: Double // Base serving size from food definition, used for quantity calculation
 )
 
 data class UpdateDiaryEntryParams(

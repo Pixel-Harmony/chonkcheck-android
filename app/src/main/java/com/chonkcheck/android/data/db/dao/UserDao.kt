@@ -97,4 +97,54 @@ interface UserDao {
 
     @Query("DELETE FROM users")
     suspend fun deleteAll()
+
+    @Query("""
+        UPDATE users SET
+            weightUnit = :weightUnit,
+            heightUnit = :heightUnit,
+            height = :height,
+            birthDate = :birthDate,
+            sex = :sex,
+            activityLevel = :activityLevel,
+            updatedAt = :updatedAt
+        WHERE id = :userId
+    """)
+    suspend fun updateProfile(
+        userId: String,
+        weightUnit: String,
+        heightUnit: String,
+        height: Double?,
+        birthDate: String?,
+        sex: String?,
+        activityLevel: String?,
+        updatedAt: Long = System.currentTimeMillis()
+    )
+
+    @Query("""
+        UPDATE users SET
+            weightGoal = :weightGoal,
+            targetWeight = :targetWeight,
+            weeklyGoal = :weeklyGoal,
+            dailyCalorieTarget = :calories,
+            proteinTarget = :protein,
+            carbsTarget = :carbs,
+            fatTarget = :fat,
+            bmr = :bmr,
+            tdee = :tdee,
+            updatedAt = :updatedAt
+        WHERE id = :userId
+    """)
+    suspend fun updateFullGoals(
+        userId: String,
+        weightGoal: String?,
+        targetWeight: Double?,
+        weeklyGoal: Double?,
+        calories: Int,
+        protein: Int,
+        carbs: Int,
+        fat: Int,
+        bmr: Int?,
+        tdee: Int?,
+        updatedAt: Long = System.currentTimeMillis()
+    )
 }

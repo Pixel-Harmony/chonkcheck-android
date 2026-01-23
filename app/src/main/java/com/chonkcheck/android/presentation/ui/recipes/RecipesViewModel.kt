@@ -20,6 +20,7 @@ data class RecipesUiState(
     val recipes: List<Recipe> = emptyList(),
     val searchQuery: String = "",
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val error: String? = null,
     val deleteConfirmation: RecipeDeleteConfirmation? = null
 )
@@ -104,6 +105,11 @@ class RecipesViewModel @Inject constructor(
         _uiState.update { it.copy(error = null) }
     }
 
+    fun refresh() {
+        _uiState.update { it.copy(isRefreshing = true) }
+        loadRecipes()
+    }
+
     private fun loadRecipes() {
         searchRecipesUseCase(_uiState.value.searchQuery, limit = 100)
             .onEach { recipes ->
@@ -111,6 +117,7 @@ class RecipesViewModel @Inject constructor(
                     it.copy(
                         recipes = recipes,
                         isLoading = false,
+                        isRefreshing = false,
                         error = null
                     )
                 }
@@ -119,6 +126,7 @@ class RecipesViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
+                        isRefreshing = false,
                         error = error.message ?: "Failed to load recipes"
                     )
                 }

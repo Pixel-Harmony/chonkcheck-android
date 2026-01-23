@@ -26,9 +26,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ChonkCheckTheme {
-                ChonkCheckApp()
-            }
+            ChonkCheckApp()
         }
     }
 }
@@ -38,24 +36,27 @@ private fun ChonkCheckApp(
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val startupState by viewModel.startupState.collectAsStateWithLifecycle()
+    val themePreference by viewModel.themePreference.collectAsStateWithLifecycle()
 
-    when (startupState) {
-        is AppStartupState.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                LoadingIndicator()
+    ChonkCheckTheme(themePreference = themePreference) {
+        when (startupState) {
+            is AppStartupState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LoadingIndicator()
+                }
             }
-        }
-        is AppStartupState.RequiresLogin -> {
-            ChonkCheckNavHost(startDestination = Screen.Login.route)
-        }
-        is AppStartupState.RequiresOnboarding -> {
-            ChonkCheckNavHost(startDestination = Screen.Onboarding.route)
-        }
-        is AppStartupState.Ready -> {
-            ChonkCheckNavHost(startDestination = Screen.Dashboard.route)
+            is AppStartupState.RequiresLogin -> {
+                ChonkCheckNavHost(startDestination = Screen.Login.route)
+            }
+            is AppStartupState.RequiresOnboarding -> {
+                ChonkCheckNavHost(startDestination = Screen.Onboarding.route)
+            }
+            is AppStartupState.Ready -> {
+                ChonkCheckNavHost(startDestination = Screen.Dashboard.route)
+            }
         }
     }
 }

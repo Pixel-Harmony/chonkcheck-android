@@ -102,7 +102,7 @@ class DiaryRepositoryImpl @Inject constructor(
                 // Try to sync with API
                 try {
                     val response = diaryApi.createDiaryEntry(params.toRequest())
-                    val syncedEntity = response.toEntity()
+                    val syncedEntity = response.toEntity(currentUser.id)
 
                     // Replace temp entity with synced entity
                     diaryDao.delete(tempId)
@@ -118,7 +118,7 @@ class DiaryRepositoryImpl @Inject constructor(
                 // No food found, just try the API call
                 try {
                     val response = diaryApi.createDiaryEntry(params.toRequest())
-                    val syncedEntity = response.toEntity()
+                    val syncedEntity = response.toEntity(currentUser.id)
                     diaryDao.insert(syncedEntity)
                     Result.success(syncedEntity.toDomain())
                 } catch (apiError: Exception) {
@@ -172,7 +172,7 @@ class DiaryRepositoryImpl @Inject constructor(
             // Try to sync with API
             try {
                 val response = diaryApi.updateDiaryEntry(id, params.toRequest())
-                val syncedEntity = response.toEntity()
+                val syncedEntity = response.toEntity(existingEntry.userId)
                 diaryDao.update(syncedEntity)
                 Result.success(syncedEntity.toDomain())
             } catch (apiError: Exception) {
@@ -255,14 +255,14 @@ class DiaryRepositoryImpl @Inject constructor(
             val currentUser = authRepository.currentUser.first() ?: return
 
             val response = diaryApi.getDiaryEntries(date.toString())
-            val entities = response.entries.map { it.toEntity() }
+            val entities = response.entries.map { it.toEntity(currentUser.id) }
 
             // Clear existing entries for date and insert fresh ones
             diaryDao.deleteAllForDate(currentUser.id, date.toString())
             diaryDao.insertAll(entities)
 
             // Update completion status
-            if (response.completed) {
+            if (response.isCompleted) {
                 val completion = DayCompletionEntity(
                     id = "${currentUser.id}_${date}",
                     userId = currentUser.id,

@@ -36,6 +36,7 @@ import com.chonkcheck.android.presentation.ui.recipes.RecipeFormScreen
 import com.chonkcheck.android.presentation.ui.recipes.RecipesScreen
 import com.chonkcheck.android.presentation.ui.scanner.BarcodeScannerScreen
 import com.chonkcheck.android.presentation.ui.scanner.NutritionLabelScannerScreen
+import com.chonkcheck.android.presentation.ui.settings.SettingsScreen
 import com.chonkcheck.android.presentation.ui.weight.WeightScreen
 import java.time.LocalDate
 
@@ -320,7 +321,13 @@ fun ChonkCheckNavHost(
             }
 
             composable(Screen.Settings.route) {
-                PlaceholderScreen("Settings")
+                SettingsScreen(
+                    onLoggedOut = {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             // Additional detail screens will be added in later phases

@@ -1,7 +1,7 @@
 package com.chonkcheck.android.data.api
 
 import com.chonkcheck.android.data.api.dto.CreateDiaryEntryRequest
-import com.chonkcheck.android.data.api.dto.DiaryEntriesResponse
+import com.chonkcheck.android.data.api.dto.DiaryDayResponse
 import com.chonkcheck.android.data.api.dto.DiaryEntryDto
 import com.chonkcheck.android.data.api.dto.UpdateDiaryEntryRequest
 import retrofit2.http.Body
@@ -14,7 +14,7 @@ import retrofit2.http.Path
 interface DiaryApi {
 
     @GET("diary/{date}")
-    suspend fun getDiaryEntries(@Path("date") date: String): DiaryEntriesResponse
+    suspend fun getDiaryEntries(@Path("date") date: String): DiaryDayResponse
 
     @POST("diary")
     suspend fun createDiaryEntry(@Body request: CreateDiaryEntryRequest): DiaryEntryDto

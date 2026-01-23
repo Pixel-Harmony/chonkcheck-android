@@ -198,7 +198,8 @@ class AddDiaryEntryViewModel @Inject constructor(
                 recipeId = null,
                 servingSize = state.servingSize,
                 servingUnit = state.servingUnit,
-                numberOfServings = state.numberOfServings
+                numberOfServings = state.numberOfServings,
+                foodServingSize = food.servingSize
             )
 
             createDiaryEntryUseCase(params)

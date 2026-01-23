@@ -19,10 +19,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -148,7 +150,8 @@ fun FoodsScreen(
                     onAddFoodClick = foodsViewModel::onAddFoodClick,
                     onDeleteClick = foodsViewModel::onDeleteClick,
                     onDeleteConfirm = foodsViewModel::onDeleteConfirm,
-                    onDeleteCancel = foodsViewModel::onDeleteCancel
+                    onDeleteCancel = foodsViewModel::onDeleteCancel,
+                    onRefresh = foodsViewModel::refresh
                 )
                 FoodHubTab.RECIPES -> RecipesContent(
                     uiState = recipesUiState,
@@ -157,7 +160,8 @@ fun FoodsScreen(
                     onAddRecipeClick = recipesViewModel::onAddRecipeClick,
                     onDeleteClick = recipesViewModel::onDeleteClick,
                     onDeleteConfirm = recipesViewModel::onDeleteConfirm,
-                    onDeleteCancel = recipesViewModel::onDeleteCancel
+                    onDeleteCancel = recipesViewModel::onDeleteCancel,
+                    onRefresh = recipesViewModel::refresh
                 )
                 FoodHubTab.MEALS -> MealsContent(
                     onAddMealClick = { /* TODO: Implement meals */ }
@@ -221,6 +225,7 @@ private fun FoodHubTabBar(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FoodsContent(
     uiState: FoodsUiState,
@@ -231,13 +236,19 @@ private fun FoodsContent(
     onDeleteClick: (com.chonkcheck.android.domain.model.Food) -> Unit,
     onDeleteConfirm: () -> Unit,
     onDeleteCancel: () -> Unit,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp)
+    PullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier.fillMaxSize()
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+        ) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Header with Add button
@@ -375,6 +386,7 @@ private fun FoodsContent(
                     .padding(bottom = 16.dp)
             )
         }
+        }
     }
 
     // Delete confirmation dialog
@@ -415,6 +427,7 @@ private fun FoodsContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RecipesContent(
     uiState: RecipesUiState,
@@ -424,13 +437,19 @@ private fun RecipesContent(
     onDeleteClick: (Recipe) -> Unit,
     onDeleteConfirm: () -> Unit,
     onDeleteCancel: () -> Unit,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp)
+    PullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier.fillMaxSize()
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+        ) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Header with Add button
@@ -527,6 +546,7 @@ private fun RecipesContent(
                     }
                 }
             }
+        }
         }
     }
 
@@ -652,6 +672,7 @@ fun FoodsScreenContent(
     onDeleteClick: (com.chonkcheck.android.domain.model.Food) -> Unit,
     onDeleteConfirm: () -> Unit,
     onDeleteCancel: () -> Unit,
+    onRefresh: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     FoodsContent(
@@ -663,6 +684,7 @@ fun FoodsScreenContent(
         onDeleteClick = onDeleteClick,
         onDeleteConfirm = onDeleteConfirm,
         onDeleteCancel = onDeleteCancel,
+        onRefresh = onRefresh,
         modifier = modifier
     )
 }

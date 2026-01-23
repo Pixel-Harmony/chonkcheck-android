@@ -30,6 +30,7 @@ data class DiaryUiState(
     val diaryDay: DiaryDay? = null,
     val macroProgress: MacroProgress? = null,
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val error: String? = null,
     val deleteConfirmation: DiaryEntry? = null
 )
@@ -50,6 +51,7 @@ class DiaryViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
+    private val _refreshTrigger = MutableStateFlow(0)
 
     private val _uiState = MutableStateFlow(DiaryUiState())
     val uiState: StateFlow<DiaryUiState> = _uiState.asStateFlow()
@@ -63,7 +65,7 @@ class DiaryViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeDiaryDay() {
-        _selectedDate
+        combine(_selectedDate, _refreshTrigger) { date, _ -> date }
             .flatMapLatest { date ->
                 combine(
                     getDiaryDayUseCase(date),
@@ -82,6 +84,7 @@ class DiaryViewModel @Inject constructor(
                         diaryDay = diaryDay,
                         macroProgress = progress,
                         isLoading = false,
+                        isRefreshing = false,
                         error = null
                     )
                 }
@@ -90,6 +93,7 @@ class DiaryViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
+                        isRefreshing = false,
                         error = error.message ?: "Failed to load diary"
                     )
                 }
@@ -165,5 +169,10 @@ class DiaryViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    fun refresh() {
+        _uiState.update { it.copy(isRefreshing = true) }
+        _refreshTrigger.value++
     }
 }

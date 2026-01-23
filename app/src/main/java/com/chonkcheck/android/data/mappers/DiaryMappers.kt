@@ -14,7 +14,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
-fun DiaryEntryDto.toEntity(): DiaryEntryEntity = DiaryEntryEntity(
+fun DiaryEntryDto.toEntity(userId: String): DiaryEntryEntity = DiaryEntryEntity(
     id = id,
     userId = userId,
     date = date,
@@ -22,17 +22,17 @@ fun DiaryEntryDto.toEntity(): DiaryEntryEntity = DiaryEntryEntity(
     foodId = foodId,
     recipeId = recipeId,
     servingSize = quantity,
-    servingUnit = "g", // Default to grams, API uses quantity as total amount
+    servingUnit = food?.servingUnit ?: savedRecipe?.servingUnit ?: "serving",
     numberOfServings = 1.0,
-    calories = calories,
-    protein = protein,
-    carbs = carbs,
-    fat = fat,
+    calories = nutrition.calories,
+    protein = nutrition.protein,
+    carbs = nutrition.carbs,
+    fat = nutrition.fat,
     name = name,
     brand = brand,
     syncedAt = System.currentTimeMillis(),
-    createdAt = createdAt.parseTimestamp() ?: System.currentTimeMillis(),
-    updatedAt = updatedAt?.parseTimestamp() ?: System.currentTimeMillis()
+    createdAt = timestamp.parseTimestamp() ?: System.currentTimeMillis(),
+    updatedAt = System.currentTimeMillis()
 )
 
 fun DiaryEntryEntity.toDomain(): DiaryEntry = DiaryEntry(
@@ -84,7 +84,7 @@ fun CreateDiaryEntryParams.toRequest(): CreateDiaryEntryRequest = CreateDiaryEnt
     meal = mealType.apiValue,
     foodId = foodId,
     recipeId = recipeId,
-    quantity = servingSize * numberOfServings
+    quantity = (servingSize / foodServingSize) * numberOfServings // Number of servings, not raw grams
 )
 
 fun UpdateDiaryEntryParams.toRequest(): UpdateDiaryEntryRequest = UpdateDiaryEntryRequest(

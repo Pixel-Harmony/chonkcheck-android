@@ -13,9 +13,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -85,10 +87,12 @@ fun DiaryScreen(
         onDeleteCancel = viewModel::onDeleteCancel,
         onCompleteDay = viewModel::onCompleteDay,
         onReopenDay = viewModel::onReopenDay,
+        onRefresh = viewModel::refresh,
         modifier = modifier
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiaryScreenContent(
     uiState: DiaryUiState,
@@ -102,16 +106,22 @@ fun DiaryScreenContent(
     onDeleteCancel: () -> Unit,
     onCompleteDay: () -> Unit,
     onReopenDay: () -> Unit,
+    onRefresh: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
     val isToday = uiState.selectedDate == LocalDate.now()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp)
+    PullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier.fillMaxSize()
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+        ) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Header
@@ -184,6 +194,7 @@ fun DiaryScreenContent(
                 // Bottom padding for navigation bar
                 Spacer(modifier = Modifier.height(16.dp))
             }
+        }
         }
     }
 

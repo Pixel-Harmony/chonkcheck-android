@@ -9,6 +9,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import com.chonkcheck.android.domain.model.ThemePreference
 
 private val LightColorScheme = lightColorScheme(
     primary = md_theme_light_primary,
@@ -72,10 +73,18 @@ private val DarkColorScheme = darkColorScheme(
 
 @Composable
 fun ChonkCheckTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themePreference: ThemePreference = ThemePreference.SYSTEM,
     dynamicColor: Boolean = false, // Disabled to use brand colors
     content: @Composable () -> Unit
 ) {
+    val systemDarkTheme = isSystemInDarkTheme()
+
+    val darkTheme = when (themePreference) {
+        ThemePreference.SYSTEM -> systemDarkTheme
+        ThemePreference.LIGHT -> false
+        ThemePreference.DARK -> true
+    }
+
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current

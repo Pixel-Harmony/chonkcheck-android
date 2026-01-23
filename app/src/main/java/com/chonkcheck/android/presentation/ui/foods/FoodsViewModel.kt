@@ -23,6 +23,7 @@ data class FoodsUiState(
     val searchQuery: String = "",
     val filterType: FoodFilterType = FoodFilterType.ALL,
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val error: String? = null,
     val deleteConfirmation: DeleteConfirmation? = null
 )
@@ -112,6 +113,11 @@ class FoodsViewModel @Inject constructor(
         _uiState.update { it.copy(error = null) }
     }
 
+    fun refresh() {
+        _uiState.update { it.copy(isRefreshing = true) }
+        loadFoods()
+    }
+
     private fun loadFoods() {
         val filter = FoodFilter(
             query = _uiState.value.searchQuery,
@@ -127,6 +133,7 @@ class FoodsViewModel @Inject constructor(
                     it.copy(
                         foods = foods,
                         isLoading = false,
+                        isRefreshing = false,
                         error = null
                     )
                 }
@@ -135,6 +142,7 @@ class FoodsViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
+                        isRefreshing = false,
                         error = error.message ?: "Failed to load foods"
                     )
                 }
