@@ -5,7 +5,9 @@ import com.chonkcheck.android.data.db.dao.WeightDao
 import com.chonkcheck.android.data.mappers.toDomain
 import com.chonkcheck.android.data.mappers.toEntity
 import com.chonkcheck.android.data.mappers.toRequest
+import com.chonkcheck.android.data.sync.SyncQueueHelper
 import com.chonkcheck.android.domain.model.CreateWeightParams
+import com.chonkcheck.android.domain.model.SyncEntityType
 import com.chonkcheck.android.domain.model.WeightEntry
 import com.chonkcheck.android.domain.repository.AuthRepository
 import com.chonkcheck.android.domain.repository.WeightRepository
@@ -25,7 +27,8 @@ import javax.inject.Singleton
 class WeightRepositoryImpl @Inject constructor(
     private val weightApi: WeightApi,
     private val weightDao: WeightDao,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val syncQueueHelper: SyncQueueHelper
 ) : WeightRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -72,6 +75,13 @@ class WeightRepositoryImpl @Inject constructor(
                     Result.success(syncedEntity.toDomain())
                 } catch (apiError: Exception) {
                     Sentry.captureException(apiError)
+                    // Queue for later sync
+                    syncQueueHelper.queueUpdate(
+                        entityType = SyncEntityType.WEIGHT_ENTRY,
+                        entityId = params.date.toString(),
+                        payload = params.toRequest(),
+                        serializer = com.chonkcheck.android.data.api.dto.CreateWeightRequest.serializer()
+                    )
                     Result.success(updatedEntity.toDomain())
                 }
             } else {
@@ -92,6 +102,13 @@ class WeightRepositoryImpl @Inject constructor(
                     Result.success(syncedEntity.toDomain())
                 } catch (apiError: Exception) {
                     Sentry.captureException(apiError)
+                    // Queue for later sync
+                    syncQueueHelper.queueCreate(
+                        entityType = SyncEntityType.WEIGHT_ENTRY,
+                        entityId = tempId,
+                        payload = params.toRequest(),
+                        serializer = com.chonkcheck.android.data.api.dto.CreateWeightRequest.serializer()
+                    )
                     Result.success(localEntity.toDomain())
                 }
             }
@@ -117,6 +134,11 @@ class WeightRepositoryImpl @Inject constructor(
                 weightApi.deleteWeightEntry(date.toString())
             } catch (apiError: Exception) {
                 Sentry.captureException(apiError)
+                // Queue for later sync
+                syncQueueHelper.queueDelete(
+                    entityType = SyncEntityType.WEIGHT_ENTRY,
+                    entityId = date.toString()
+                )
             }
             Result.success(Unit)
         } catch (e: Exception) {

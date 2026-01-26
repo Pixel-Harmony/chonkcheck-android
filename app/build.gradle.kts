@@ -22,6 +22,18 @@ android {
     namespace = "com.chonkcheck.android"
     compileSdk = 35
 
+    signingConfigs {
+        create("release") {
+            val storeFilePath = localProperties.getProperty("KEYSTORE_FILE", "")
+            if (storeFilePath.isNotEmpty()) {
+                storeFile = file(storeFilePath)
+                storePassword = localProperties.getProperty("KEYSTORE_PASSWORD", "")
+                keyAlias = localProperties.getProperty("KEY_ALIAS", "")
+                keyPassword = localProperties.getProperty("KEY_PASSWORD", "")
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "com.chonkcheck.android"
         minSdk = 26
@@ -35,6 +47,8 @@ android {
         buildConfigField("String", "AUTH0_CLIENT_ID", "\"${localProperties.getProperty("AUTH0_CLIENT_ID", "")}\"")
         buildConfigField("String", "AUTH0_AUDIENCE", "\"${localProperties.getProperty("AUTH0_AUDIENCE", "")}\"")
         buildConfigField("String", "API_URL", "\"${localProperties.getProperty("API_URL", "https://app.chonkcheck.com/api/")}\"")
+        buildConfigField("String", "SENTRY_DSN", "\"${localProperties.getProperty("SENTRY_DSN", "")}\"")
+        buildConfigField("boolean", "SENTRY_DEBUG", localProperties.getProperty("SENTRY_DEBUG", "false"))
 
         manifestPlaceholders["auth0Domain"] = localProperties.getProperty("AUTH0_DOMAIN", "")
         manifestPlaceholders["auth0Scheme"] = "com.chonkcheck.android"
@@ -54,6 +68,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Use release signing if configured
+            val releaseSigningConfig = signingConfigs.findByName("release")
+            if (releaseSigningConfig?.storeFile?.exists() == true) {
+                signingConfig = releaseSigningConfig
+            }
         }
     }
 

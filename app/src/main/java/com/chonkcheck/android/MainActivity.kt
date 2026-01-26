@@ -17,6 +17,8 @@ import com.chonkcheck.android.presentation.MainViewModel
 import com.chonkcheck.android.presentation.navigation.ChonkCheckNavHost
 import com.chonkcheck.android.presentation.navigation.Screen
 import com.chonkcheck.android.presentation.ui.components.LoadingIndicator
+import com.chonkcheck.android.presentation.ui.milestones.MilestoneModal
+import com.chonkcheck.android.presentation.viewmodel.MilestoneViewModel
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -33,12 +35,22 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun ChonkCheckApp(
-    viewModel: MainViewModel = hiltViewModel()
+    viewModel: MainViewModel = hiltViewModel(),
+    milestoneViewModel: MilestoneViewModel = hiltViewModel()
 ) {
     val startupState by viewModel.startupState.collectAsStateWithLifecycle()
     val themePreference by viewModel.themePreference.collectAsStateWithLifecycle()
+    val pendingMilestone by milestoneViewModel.pendingMilestone.collectAsStateWithLifecycle()
 
     ChonkCheckTheme(themePreference = themePreference) {
+        // Show milestone modal if there's a pending milestone
+        pendingMilestone?.let { milestone ->
+            MilestoneModal(
+                milestone = milestone,
+                onDismiss = { milestoneViewModel.dismissMilestone() }
+            )
+        }
+
         when (startupState) {
             is AppStartupState.Loading -> {
                 Box(

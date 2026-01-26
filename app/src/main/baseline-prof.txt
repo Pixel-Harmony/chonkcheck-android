@@ -1,0 +1,66 @@
+# Baseline Profile for ChonkCheck Android
+# This profile helps AOT compile critical paths for better startup performance
+
+# Application entry points
+Lcom/chonkcheck/android/ChonkCheckApplication;
+Lcom/chonkcheck/android/MainActivity;
+
+# Core Compose classes
+HSPLandroidx/compose/**;
+Landroidx/compose/runtime/**;
+Landroidx/compose/ui/**;
+Landroidx/compose/material3/**;
+Landroidx/compose/foundation/**;
+Landroidx/compose/animation/**;
+
+# Navigation
+Landroidx/navigation/**;
+Landroidx/hilt/navigation/compose/**;
+
+# ViewModels
+Lcom/chonkcheck/android/presentation/viewmodel/**;
+Lcom/chonkcheck/android/presentation/MainViewModel;
+
+# UI Screens - Dashboard (main entry point)
+Lcom/chonkcheck/android/presentation/ui/dashboard/**;
+
+# UI Screens - Diary (frequently accessed)
+Lcom/chonkcheck/android/presentation/ui/diary/**;
+
+# UI Components
+Lcom/chonkcheck/android/presentation/ui/components/**;
+
+# Navigation
+Lcom/chonkcheck/android/presentation/navigation/**;
+
+# Theme
+Lcom/chonkcheck/android/ui/theme/**;
+
+# Domain models
+Lcom/chonkcheck/android/domain/model/**;
+
+# Repository interfaces
+Lcom/chonkcheck/android/domain/repository/**;
+
+# Use cases
+Lcom/chonkcheck/android/domain/usecase/**;
+
+# Hilt
+Ldagger/hilt/**;
+Ljavax/inject/**;
+
+# Room
+Landroidx/room/**;
+
+# Retrofit/OkHttp
+Lretrofit2/**;
+Lokhttp3/**;
+
+# Kotlinx Serialization
+Lkotlinx/serialization/**;
+
+# Coroutines
+Lkotlinx/coroutines/**;
+
+# WorkManager (for sync)
+Landroidx/work/**;

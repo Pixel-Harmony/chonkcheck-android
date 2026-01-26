@@ -8,11 +8,13 @@ import com.chonkcheck.android.data.db.entity.DayCompletionEntity
 import com.chonkcheck.android.data.mappers.toDomain
 import com.chonkcheck.android.data.mappers.toEntity
 import com.chonkcheck.android.data.mappers.toRequest
+import com.chonkcheck.android.data.sync.SyncQueueHelper
 import com.chonkcheck.android.domain.model.CreateDiaryEntryParams
 import com.chonkcheck.android.domain.model.DiaryDay
 import com.chonkcheck.android.domain.model.DiaryEntry
 import com.chonkcheck.android.domain.model.MacroTotals
 import com.chonkcheck.android.domain.model.MealType
+import com.chonkcheck.android.domain.model.SyncEntityType
 import com.chonkcheck.android.domain.model.UpdateDiaryEntryParams
 import com.chonkcheck.android.domain.repository.AuthRepository
 import com.chonkcheck.android.domain.repository.DiaryRepository
@@ -36,7 +38,8 @@ class DiaryRepositoryImpl @Inject constructor(
     private val diaryDao: DiaryDao,
     private val exerciseDao: ExerciseDao,
     private val foodDao: FoodDao,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val syncQueueHelper: SyncQueueHelper
 ) : DiaryRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -120,6 +123,13 @@ class DiaryRepositoryImpl @Inject constructor(
                 } catch (apiError: Exception) {
                     // API failed, but local save succeeded - return local entry
                     Sentry.captureException(apiError)
+                    // Queue for later sync
+                    syncQueueHelper.queueCreate(
+                        entityType = SyncEntityType.DIARY_ENTRY,
+                        entityId = tempId,
+                        payload = params.toRequest(),
+                        serializer = com.chonkcheck.android.data.api.dto.CreateDiaryEntryRequest.serializer()
+                    )
                     Result.success(localEntity.toDomain())
                 }
             } else {
@@ -193,7 +203,11 @@ class DiaryRepositoryImpl @Inject constructor(
                 diaryApi.deleteDiaryEntry(id)
             } catch (apiError: Exception) {
                 Sentry.captureException(apiError)
-                // Local delete succeeded, will sync later
+                // Queue for later sync
+                syncQueueHelper.queueDelete(
+                    entityType = SyncEntityType.DIARY_ENTRY,
+                    entityId = id
+                )
             }
             Result.success(Unit)
         } catch (e: Exception) {

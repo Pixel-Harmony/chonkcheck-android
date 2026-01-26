@@ -7,8 +7,10 @@ import com.chonkcheck.android.data.db.entity.RecipeIngredientJson
 import com.chonkcheck.android.data.mappers.toDomain
 import com.chonkcheck.android.data.mappers.toEntity
 import com.chonkcheck.android.data.mappers.toRequest
+import com.chonkcheck.android.data.sync.SyncQueueHelper
 import com.chonkcheck.android.domain.model.CreateRecipeParams
 import com.chonkcheck.android.domain.model.Recipe
+import com.chonkcheck.android.domain.model.SyncEntityType
 import com.chonkcheck.android.domain.model.UpdateRecipeParams
 import com.chonkcheck.android.domain.repository.AuthRepository
 import com.chonkcheck.android.domain.repository.RecipeRepository
@@ -27,7 +29,8 @@ class RecipeRepositoryImpl @Inject constructor(
     private val recipeApi: RecipeApi,
     private val recipeDao: RecipeDao,
     private val foodDao: FoodDao,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val syncQueueHelper: SyncQueueHelper
 ) : RecipeRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -75,6 +78,13 @@ class RecipeRepositoryImpl @Inject constructor(
             } catch (apiError: Exception) {
                 // API failed, but local save succeeded - return local recipe
                 Sentry.captureException(apiError)
+                // Queue for later sync
+                syncQueueHelper.queueCreate(
+                    entityType = SyncEntityType.RECIPE,
+                    entityId = tempId,
+                    payload = params.toRequest(),
+                    serializer = com.chonkcheck.android.data.api.dto.CreateRecipeRequest.serializer()
+                )
                 Result.success(localEntity.toDomain())
             }
         } catch (e: Exception) {
@@ -125,6 +135,13 @@ class RecipeRepositoryImpl @Inject constructor(
                 Result.success(syncedEntity.toDomain())
             } catch (apiError: Exception) {
                 Sentry.captureException(apiError)
+                // Queue for later sync
+                syncQueueHelper.queueUpdate(
+                    entityType = SyncEntityType.RECIPE,
+                    entityId = id,
+                    payload = params.toRequest(),
+                    serializer = com.chonkcheck.android.data.api.dto.UpdateRecipeRequest.serializer()
+                )
                 Result.success(updatedEntity.toDomain())
             }
         } catch (e: Exception) {
@@ -143,7 +160,11 @@ class RecipeRepositoryImpl @Inject constructor(
                 recipeApi.deleteRecipe(id)
             } catch (apiError: Exception) {
                 Sentry.captureException(apiError)
-                // Local delete succeeded, will sync later
+                // Queue for later sync
+                syncQueueHelper.queueDelete(
+                    entityType = SyncEntityType.RECIPE,
+                    entityId = id
+                )
             }
             Result.success(Unit)
         } catch (e: Exception) {

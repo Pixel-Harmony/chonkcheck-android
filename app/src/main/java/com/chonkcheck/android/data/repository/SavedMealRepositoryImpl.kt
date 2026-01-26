@@ -8,6 +8,7 @@ import com.chonkcheck.android.data.db.entity.SavedMealItemJson
 import com.chonkcheck.android.data.mappers.toDomain
 import com.chonkcheck.android.data.mappers.toEntity
 import com.chonkcheck.android.data.mappers.toRequest
+import com.chonkcheck.android.data.sync.SyncQueueHelper
 import com.chonkcheck.android.domain.model.AddMealToDiaryParams
 import com.chonkcheck.android.domain.model.CreateSavedMealParams
 import com.chonkcheck.android.domain.model.DiaryEntry
@@ -15,6 +16,7 @@ import com.chonkcheck.android.domain.model.MealType
 import com.chonkcheck.android.domain.model.SavedMeal
 import com.chonkcheck.android.domain.model.SavedMealItemType
 import com.chonkcheck.android.domain.model.ServingUnit
+import com.chonkcheck.android.domain.model.SyncEntityType
 import com.chonkcheck.android.domain.model.UpdateSavedMealParams
 import com.chonkcheck.android.domain.repository.AuthRepository
 import com.chonkcheck.android.domain.repository.SavedMealRepository
@@ -39,7 +41,8 @@ class SavedMealRepositoryImpl @Inject constructor(
     private val savedMealDao: SavedMealDao,
     private val foodDao: FoodDao,
     private val recipeDao: RecipeDao,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val syncQueueHelper: SyncQueueHelper
 ) : SavedMealRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -93,6 +96,13 @@ class SavedMealRepositoryImpl @Inject constructor(
             } catch (apiError: Exception) {
                 // API failed, but local save succeeded - return local meal
                 Sentry.captureException(apiError)
+                // Queue for later sync
+                syncQueueHelper.queueCreate(
+                    entityType = SyncEntityType.SAVED_MEAL,
+                    entityId = tempId,
+                    payload = params.toRequest(),
+                    serializer = com.chonkcheck.android.data.api.dto.CreateSavedMealRequest.serializer()
+                )
                 Result.success(localEntity.toDomain())
             }
         } catch (e: Exception) {
@@ -143,6 +153,17 @@ class SavedMealRepositoryImpl @Inject constructor(
                 Result.success(syncedEntity.toDomain())
             } catch (apiError: Exception) {
                 Sentry.captureException(apiError)
+                // Queue for later sync
+                val request = com.chonkcheck.android.data.api.dto.CreateSavedMealRequest(
+                    name = params.name ?: existingMeal.name,
+                    items = params.items?.map { it.toRequest() } ?: emptyList()
+                )
+                syncQueueHelper.queueUpdate(
+                    entityType = SyncEntityType.SAVED_MEAL,
+                    entityId = id,
+                    payload = request,
+                    serializer = com.chonkcheck.android.data.api.dto.CreateSavedMealRequest.serializer()
+                )
                 Result.success(updatedEntity.toDomain())
             }
         } catch (e: Exception) {
@@ -161,7 +182,11 @@ class SavedMealRepositoryImpl @Inject constructor(
                 savedMealApi.deleteSavedMeal(id)
             } catch (apiError: Exception) {
                 Sentry.captureException(apiError)
-                // Local delete succeeded, will sync later
+                // Queue for later sync
+                syncQueueHelper.queueDelete(
+                    entityType = SyncEntityType.SAVED_MEAL,
+                    entityId = id
+                )
             }
             Result.success(Unit)
         } catch (e: Exception) {

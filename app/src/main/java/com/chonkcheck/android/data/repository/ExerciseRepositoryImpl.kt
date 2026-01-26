@@ -5,8 +5,10 @@ import com.chonkcheck.android.data.db.dao.ExerciseDao
 import com.chonkcheck.android.data.mappers.toDomain
 import com.chonkcheck.android.data.mappers.toEntity
 import com.chonkcheck.android.data.mappers.toRequest
+import com.chonkcheck.android.data.sync.SyncQueueHelper
 import com.chonkcheck.android.domain.model.CreateExerciseParams
 import com.chonkcheck.android.domain.model.Exercise
+import com.chonkcheck.android.domain.model.SyncEntityType
 import com.chonkcheck.android.domain.model.UpdateExerciseParams
 import com.chonkcheck.android.domain.repository.AuthRepository
 import com.chonkcheck.android.domain.repository.ExerciseRepository
@@ -26,7 +28,8 @@ import javax.inject.Singleton
 class ExerciseRepositoryImpl @Inject constructor(
     private val exerciseApi: ExerciseApi,
     private val exerciseDao: ExerciseDao,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val syncQueueHelper: SyncQueueHelper
 ) : ExerciseRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -65,6 +68,13 @@ class ExerciseRepositoryImpl @Inject constructor(
                 Result.success(syncedEntity.toDomain())
             } catch (apiError: Exception) {
                 Sentry.captureException(apiError)
+                // Queue for later sync
+                syncQueueHelper.queueCreate(
+                    entityType = SyncEntityType.EXERCISE_ENTRY,
+                    entityId = tempId,
+                    payload = params.toRequest(),
+                    serializer = com.chonkcheck.android.data.api.dto.CreateExerciseRequest.serializer()
+                )
                 Result.success(localEntity.toDomain())
             }
         } catch (e: Exception) {
@@ -95,6 +105,13 @@ class ExerciseRepositoryImpl @Inject constructor(
                 Result.success(syncedEntity.toDomain())
             } catch (apiError: Exception) {
                 Sentry.captureException(apiError)
+                // Queue for later sync
+                syncQueueHelper.queueUpdate(
+                    entityType = SyncEntityType.EXERCISE_ENTRY,
+                    entityId = id,
+                    payload = params.toRequest(),
+                    serializer = com.chonkcheck.android.data.api.dto.UpdateExerciseRequest.serializer()
+                )
                 Result.success(updatedEntity.toDomain())
             }
         } catch (e: Exception) {
@@ -111,6 +128,11 @@ class ExerciseRepositoryImpl @Inject constructor(
                 exerciseApi.deleteExercise(id)
             } catch (apiError: Exception) {
                 Sentry.captureException(apiError)
+                // Queue for later sync
+                syncQueueHelper.queueDelete(
+                    entityType = SyncEntityType.EXERCISE_ENTRY,
+                    entityId = id
+                )
             }
             Result.success(Unit)
         } catch (e: Exception) {

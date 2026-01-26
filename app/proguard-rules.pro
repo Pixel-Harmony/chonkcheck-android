@@ -83,3 +83,23 @@
 # Sentry
 -keep class io.sentry.** { *; }
 -dontwarn io.sentry.**
+
+# WorkManager workers
+-keep class * extends androidx.work.Worker
+-keep class * extends androidx.work.CoroutineWorker
+-keep class com.chonkcheck.android.data.sync.SyncWorker { *; }
+
+# Sync classes
+-keep class com.chonkcheck.android.data.sync.** { *; }
+-keep class com.chonkcheck.android.domain.model.SyncStatus { *; }
+-keep class com.chonkcheck.android.domain.model.SyncStatus$* { *; }
+
+# Milestone DTOs
+-keep class com.chonkcheck.android.data.api.dto.MilestoneDataDto { *; }
+-keep class com.chonkcheck.android.data.api.dto.MilestonesResponse { *; }
+-keep class com.chonkcheck.android.data.api.dto.MarkMilestoneViewedRequest { *; }
+-keep class com.chonkcheck.android.data.api.dto.SuccessResponse { *; }
+
+# Milestone domain models
+-keep class com.chonkcheck.android.domain.model.Milestone* { *; }
+-keep class com.chonkcheck.android.domain.model.PendingMilestones { *; }

@@ -5,10 +5,12 @@ import com.chonkcheck.android.data.db.dao.FoodDao
 import com.chonkcheck.android.data.mappers.toDomain
 import com.chonkcheck.android.data.mappers.toEntity
 import com.chonkcheck.android.data.mappers.toRequest
+import com.chonkcheck.android.data.sync.SyncQueueHelper
 import com.chonkcheck.android.domain.model.CreateFoodParams
 import com.chonkcheck.android.domain.model.Food
 import com.chonkcheck.android.domain.model.FoodFilter
 import com.chonkcheck.android.domain.model.FoodFilterType
+import com.chonkcheck.android.domain.model.SyncEntityType
 import com.chonkcheck.android.domain.model.UpdateFoodParams
 import com.chonkcheck.android.domain.repository.AuthRepository
 import com.chonkcheck.android.domain.repository.FoodRepository
@@ -24,7 +26,8 @@ import javax.inject.Singleton
 class FoodRepositoryImpl @Inject constructor(
     private val foodApi: FoodApi,
     private val foodDao: FoodDao,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val syncQueueHelper: SyncQueueHelper
 ) : FoodRepository {
 
     override fun searchFoods(filter: FoodFilter): Flow<List<Food>> {
@@ -86,8 +89,14 @@ class FoodRepositoryImpl @Inject constructor(
                 Result.success(syncedEntity.toDomain())
             } catch (apiError: Exception) {
                 // API failed, but local save succeeded - return local food
-                // Will be synced later
                 Sentry.captureException(apiError)
+                // Queue for later sync
+                syncQueueHelper.queueCreate(
+                    entityType = SyncEntityType.FOOD,
+                    entityId = tempId,
+                    payload = params.toRequest(),
+                    serializer = com.chonkcheck.android.data.api.dto.CreateFoodRequest.serializer()
+                )
                 Result.success(localEntity.toDomain())
             }
         } catch (e: Exception) {
@@ -134,6 +143,13 @@ class FoodRepositoryImpl @Inject constructor(
                 Result.success(syncedEntity.toDomain())
             } catch (apiError: Exception) {
                 Sentry.captureException(apiError)
+                // Queue for later sync
+                syncQueueHelper.queueUpdate(
+                    entityType = SyncEntityType.FOOD,
+                    entityId = id,
+                    payload = params.toRequest(),
+                    serializer = com.chonkcheck.android.data.api.dto.UpdateFoodRequest.serializer()
+                )
                 Result.success(updatedEntity.toDomain())
             }
         } catch (e: Exception) {
@@ -152,7 +168,11 @@ class FoodRepositoryImpl @Inject constructor(
                 foodApi.deleteFood(id)
             } catch (apiError: Exception) {
                 Sentry.captureException(apiError)
-                // Local delete succeeded, will sync later
+                // Queue for later sync
+                syncQueueHelper.queueDelete(
+                    entityType = SyncEntityType.FOOD,
+                    entityId = id
+                )
             }
             Result.success(Unit)
         } catch (e: Exception) {
