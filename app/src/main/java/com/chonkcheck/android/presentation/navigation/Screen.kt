@@ -12,7 +12,6 @@ sealed class Screen(val route: String) {
     data object Diary : Screen("diary")
     data object Foods : Screen("foods")
     data object Recipes : Screen("recipes")
-    data object SavedMeals : Screen("saved_meals")
     data object Weight : Screen("weight")
     data object Settings : Screen("settings")
 
@@ -37,6 +36,12 @@ sealed class Screen(val route: String) {
         fun createRoute(savedMealId: String) = "saved_meal/$savedMealId"
     }
     data object CreateSavedMeal : Screen("saved_meal/create")
+    data object EditSavedMeal : Screen("saved_meal/{savedMealId}/edit") {
+        fun createRoute(savedMealId: String) = "saved_meal/$savedMealId/edit"
+    }
+    data object SavedMealPreview : Screen("saved_meal/{savedMealId}/preview/{date}/{mealType}") {
+        fun createRoute(savedMealId: String, date: String, mealType: String) = "saved_meal/$savedMealId/preview/$date/$mealType"
+    }
 
     // Diary entry screens
     data object DiaryAddEntry : Screen("diary/add/{date}/{mealType}") {

@@ -106,6 +106,8 @@ fun DiaryScreen(viewModel: DiaryViewModel = hiltViewModel()) {
 
 > **MANDATORY: OpenAPI Specification Reference**
 >
+> **EVERY TIME you work on API integration, you MUST read the OpenAPI spec first. No exceptions.**
+>
 > The backend API is fully documented in OpenAPI format at:
 > ```
 > ../chonkcheck/apps/backend/openapi.yaml
@@ -117,7 +119,9 @@ fun DiaryScreen(viewModel: DiaryViewModel = hiltViewModel()) {
 > 3. Verify response schemas for proper DTO mapping
 > 4. Check enum values (e.g., activity levels: `sedentary`, `light`, `moderate`, `active`, `very_active`)
 >
-> **DO NOT assume endpoint paths or schemas. The web app at `../chonkcheck` uses the same API and can serve as a reference for correct usage.**
+> **DO NOT assume endpoint paths or schemas. DO NOT rely on memory from previous sessions. ALWAYS read the spec fresh for each API task.**
+>
+> The web app at `../chonkcheck` uses the same API and can serve as a reference for correct usage.
 
 ### Key Endpoints
 

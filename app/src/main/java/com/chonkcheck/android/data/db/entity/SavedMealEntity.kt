@@ -49,6 +49,7 @@ data class SavedMealItemJson(
     val servingSize: Double,
     val servingUnit: String,
     val numberOfServings: Double,
+    val enteredAmount: Double? = null,
     val calories: Double,
     val protein: Double,
     val carbs: Double,

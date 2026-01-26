@@ -55,6 +55,13 @@ import com.chonkcheck.android.presentation.ui.foods.components.FoodFilterChips
 import com.chonkcheck.android.presentation.ui.foods.components.FoodSearchBar
 import com.chonkcheck.android.presentation.ui.foods.components.FoodsEmptyState
 import com.chonkcheck.android.presentation.ui.recipes.RecipeDeleteConfirmation
+import com.chonkcheck.android.presentation.ui.meals.MealDeleteConfirmation
+import com.chonkcheck.android.presentation.ui.meals.SavedMealsEvent
+import com.chonkcheck.android.presentation.ui.meals.SavedMealsUiState
+import com.chonkcheck.android.presentation.ui.meals.SavedMealsViewModel
+import com.chonkcheck.android.presentation.ui.meals.components.MealSearchBar
+import com.chonkcheck.android.presentation.ui.meals.components.SavedMealCard
+import com.chonkcheck.android.presentation.ui.meals.components.SavedMealsEmptyState
 import com.chonkcheck.android.presentation.ui.recipes.RecipesEvent
 import com.chonkcheck.android.presentation.ui.recipes.RecipesUiState
 import com.chonkcheck.android.presentation.ui.recipes.RecipesViewModel
@@ -78,9 +85,12 @@ fun FoodsScreen(
     onNavigateToCreateFood: () -> Unit,
     onNavigateToCreateRecipe: () -> Unit = {},
     onNavigateToEditRecipe: (String) -> Unit = {},
+    onNavigateToCreateMeal: () -> Unit = {},
+    onNavigateToEditMeal: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     foodsViewModel: FoodsViewModel = hiltViewModel(),
-    recipesViewModel: RecipesViewModel = hiltViewModel()
+    recipesViewModel: RecipesViewModel = hiltViewModel(),
+    mealsViewModel: SavedMealsViewModel = hiltViewModel()
 ) {
     var selectedTab by remember { mutableStateOf(FoodHubTab.FOODS) }
 
@@ -89,6 +99,9 @@ fun FoodsScreen(
 
     val recipesUiState by recipesViewModel.uiState.collectAsStateWithLifecycle()
     val recipesEvent by recipesViewModel.events.collectAsStateWithLifecycle()
+
+    val mealsUiState by mealsViewModel.uiState.collectAsStateWithLifecycle()
+    val mealsEvent by mealsViewModel.events.collectAsStateWithLifecycle()
 
     // Handle foods navigation events
     LaunchedEffect(foodsEvent) {
@@ -132,6 +145,27 @@ fun FoodsScreen(
         }
     }
 
+    // Handle meals navigation events
+    LaunchedEffect(mealsEvent) {
+        when (mealsEvent) {
+            is SavedMealsEvent.NavigateToEditMeal -> {
+                onNavigateToEditMeal((mealsEvent as SavedMealsEvent.NavigateToEditMeal).mealId)
+                mealsViewModel.onEventConsumed()
+            }
+            is SavedMealsEvent.NavigateToCreateMeal -> {
+                onNavigateToCreateMeal()
+                mealsViewModel.onEventConsumed()
+            }
+            is SavedMealsEvent.MealDeleted -> {
+                mealsViewModel.onEventConsumed()
+            }
+            is SavedMealsEvent.ShowError -> {
+                mealsViewModel.onEventConsumed()
+            }
+            null -> {}
+        }
+    }
+
     Column(
         modifier = modifier.fillMaxSize()
     ) {
@@ -164,7 +198,14 @@ fun FoodsScreen(
                     onRefresh = recipesViewModel::refresh
                 )
                 FoodHubTab.MEALS -> MealsContent(
-                    onAddMealClick = { /* TODO: Implement meals */ }
+                    uiState = mealsUiState,
+                    onSearchQueryChange = mealsViewModel::onSearchQueryChange,
+                    onMealClick = mealsViewModel::onMealClick,
+                    onAddMealClick = mealsViewModel::onAddMealClick,
+                    onDeleteClick = mealsViewModel::onDeleteClick,
+                    onDeleteConfirm = mealsViewModel::onDeleteConfirm,
+                    onDeleteCancel = mealsViewModel::onDeleteCancel,
+                    onRefresh = mealsViewModel::refresh
                 )
             }
         }
@@ -588,77 +629,164 @@ private fun RecipesContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MealsContent(
+    uiState: SavedMealsUiState,
+    onSearchQueryChange: (String) -> Unit,
+    onMealClick: (String) -> Unit,
     onAddMealClick: () -> Unit,
+    onDeleteClick: (com.chonkcheck.android.domain.model.SavedMeal) -> Unit,
+    onDeleteConfirm: () -> Unit,
+    onDeleteCancel: () -> Unit,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp)
+    PullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier.fillMaxSize()
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Header with Add button
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
         ) {
-            Text(
-                text = "Meals",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.SemiBold
-                ),
-                color = MaterialTheme.colorScheme.onBackground
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Header with Add button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "My Meals",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                Button(
+                    onClick = onAddMealClick,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Purple
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 2.dp,
+                        pressedElevation = 4.dp
+                    )
+                ) {
+                    Text(
+                        text = "+ Add",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Search bar
+            MealSearchBar(
+                query = uiState.searchQuery,
+                onQueryChange = onSearchQueryChange
             )
 
-            Button(
-                onClick = onAddMealClick,
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Purple
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 2.dp,
-                    pressedElevation = 4.dp
-                )
-            ) {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Content
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LoadingIndicator()
+                }
+            } else if (uiState.meals.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    SavedMealsEmptyState(
+                        onCreateMealClick = onAddMealClick,
+                        isSearchResult = uiState.searchQuery.isNotEmpty()
+                    )
+                }
+            } else {
+                // Meals list
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    LazyColumn {
+                        items(
+                            items = uiState.meals,
+                            key = { it.id }
+                        ) { meal ->
+                            SavedMealCard(
+                                savedMeal = meal,
+                                onClick = { onMealClick(meal.id) },
+                                onDelete = { onDeleteClick(meal) }
+                            )
+                            if (meal != uiState.meals.last()) {
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Delete confirmation dialog
+    if (uiState.deleteConfirmation != null) {
+        AlertDialog(
+            onDismissRequest = onDeleteCancel,
+            title = {
                 Text(
-                    text = "+ Add",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Medium
+                    text = "Delete meal?",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.SemiBold
                     )
                 )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Placeholder content
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            },
+            text = {
                 Text(
-                    text = "Saved Meals",
-                    style = MaterialTheme.typography.titleLarge,
+                    text = "This meal will be removed. Your past diary entries using this meal will remain intact.",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Coming soon",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = onDeleteConfirm,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDeleteCancel) {
+                    Text("Cancel")
+                }
             }
-        }
+        )
     }
 }
 

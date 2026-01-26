@@ -51,9 +51,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chonkcheck.android.domain.model.Food
 import com.chonkcheck.android.domain.model.FoodType
 import com.chonkcheck.android.domain.model.MealType
+import com.chonkcheck.android.domain.model.SavedMeal
 import com.chonkcheck.android.domain.model.ServingUnit
 import com.chonkcheck.android.presentation.ui.components.LoadingIndicator
 import com.chonkcheck.android.presentation.ui.foods.components.FoodSearchBar
+import com.chonkcheck.android.presentation.ui.meals.components.SavedMealCard
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.ChonkGreen
 import java.time.LocalDate
@@ -65,6 +67,7 @@ fun AddDiaryEntryScreen(
     onNavigateBack: () -> Unit,
     onNavigateToBarcodeScanner: () -> Unit,
     onFoodAdded: () -> Unit,
+    onNavigateToMealPreview: (savedMealId: String, date: String, mealType: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AddDiaryEntryViewModel = hiltViewModel()
 ) {
@@ -80,6 +83,11 @@ fun AddDiaryEntryScreen(
             }
             is AddDiaryEntryEvent.NavigateBack -> {
                 onNavigateBack()
+                viewModel.onEventConsumed()
+            }
+            is AddDiaryEntryEvent.NavigateToMealPreview -> {
+                val e = event as AddDiaryEntryEvent.NavigateToMealPreview
+                onNavigateToMealPreview(e.savedMealId, e.date, e.mealType)
                 viewModel.onEventConsumed()
             }
             is AddDiaryEntryEvent.ShowError -> {
@@ -125,6 +133,7 @@ fun AddDiaryEntryScreen(
                 uiState = uiState,
                 onSearchQueryChange = viewModel::onSearchQueryChange,
                 onFoodSelected = viewModel::onFoodSelected,
+                onMealSelected = viewModel::onMealSelected,
                 modifier = Modifier.padding(innerPadding)
             )
             AddEntryPhase.DETAILS -> DetailsPhaseContent(
@@ -154,6 +163,7 @@ private fun SearchPhaseContent(
     uiState: AddDiaryEntryUiState,
     onSearchQueryChange: (String) -> Unit,
     onFoodSelected: (Food) -> Unit,
+    onMealSelected: (SavedMeal) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -167,7 +177,7 @@ private fun SearchPhaseContent(
         FoodSearchBar(
             query = uiState.searchQuery,
             onQueryChange = onSearchQueryChange,
-            placeholder = "Search foods..."
+            placeholder = "Search foods, meals..."
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -189,7 +199,15 @@ private fun SearchPhaseContent(
                 uiState.searchResults
             }
 
-            if (displayFoods.isEmpty() && uiState.searchQuery.isNotBlank()) {
+            val displayMeals = if (uiState.searchQuery.isBlank()) {
+                uiState.recentMeals
+            } else {
+                uiState.savedMealResults
+            }
+
+            val hasNoResults = displayFoods.isEmpty() && displayMeals.isEmpty() && uiState.searchQuery.isNotBlank()
+
+            if (hasNoResults) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -197,44 +215,72 @@ private fun SearchPhaseContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No foods found",
+                        text = "No foods or meals found",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    LazyColumn {
-                        if (displayFoods.isNotEmpty() && uiState.searchQuery.isBlank()) {
-                            item {
-                                Text(
-                                    text = "Recent Foods",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(16.dp, 12.dp, 16.dp, 4.dp)
-                                )
-                            }
+                    // Saved Meals section
+                    if (displayMeals.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = if (uiState.searchQuery.isBlank()) "Recent Meals" else "Saved Meals",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
                         }
 
                         items(
-                            items = displayFoods,
-                            key = { it.id }
-                        ) { food ->
-                            FoodSearchResultItem(
-                                food = food,
-                                onClick = { onFoodSelected(food) }
+                            items = displayMeals,
+                            key = { "meal_${it.id}" }
+                        ) { meal ->
+                            SavedMealCard(
+                                savedMeal = meal,
+                                onClick = { onMealSelected(meal) },
+                                onDelete = null
                             )
-                            if (food != displayFoods.last()) {
-                                HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                )
+                        }
+                    }
+
+                    // Foods section
+                    if (displayFoods.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = if (uiState.searchQuery.isBlank()) "Recent Foods" else "Foods",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
+
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column {
+                                    displayFoods.forEachIndexed { index, food ->
+                                        FoodSearchResultItem(
+                                            food = food,
+                                            onClick = { onFoodSelected(food) }
+                                        )
+                                        if (index < displayFoods.lastIndex) {
+                                            HorizontalDivider(
+                                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -530,7 +576,8 @@ private fun SearchPhasePreview() {
                 )
             ),
             onSearchQueryChange = {},
-            onFoodSelected = {}
+            onFoodSelected = {},
+            onMealSelected = {}
         )
     }
 }

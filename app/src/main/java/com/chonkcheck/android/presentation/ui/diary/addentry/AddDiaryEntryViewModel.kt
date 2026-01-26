@@ -8,9 +8,11 @@ import com.chonkcheck.android.domain.model.Food
 import com.chonkcheck.android.domain.model.FoodFilter
 import com.chonkcheck.android.domain.model.FoodFilterType
 import com.chonkcheck.android.domain.model.MealType
+import com.chonkcheck.android.domain.model.SavedMeal
 import com.chonkcheck.android.domain.model.ServingUnit
 import com.chonkcheck.android.domain.usecase.CreateDiaryEntryUseCase
 import com.chonkcheck.android.domain.usecase.SearchFoodsUseCase
+import com.chonkcheck.android.domain.usecase.SearchSavedMealsUseCase
 import com.chonkcheck.android.presentation.navigation.NavArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -41,8 +43,10 @@ data class AddDiaryEntryUiState(
     // Search phase
     val searchQuery: String = "",
     val searchResults: List<Food> = emptyList(),
+    val savedMealResults: List<SavedMeal> = emptyList(),
     val isSearching: Boolean = false,
     val recentFoods: List<Food> = emptyList(),
+    val recentMeals: List<SavedMeal> = emptyList(),
 
     // Details phase
     val selectedFood: Food? = null,
@@ -64,6 +68,7 @@ data class AddDiaryEntryUiState(
 sealed class AddDiaryEntryEvent {
     data object EntrySaved : AddDiaryEntryEvent()
     data object NavigateBack : AddDiaryEntryEvent()
+    data class NavigateToMealPreview(val savedMealId: String, val date: String, val mealType: String) : AddDiaryEntryEvent()
     data class ShowError(val message: String) : AddDiaryEntryEvent()
 }
 
@@ -71,6 +76,7 @@ sealed class AddDiaryEntryEvent {
 class AddDiaryEntryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val searchFoodsUseCase: SearchFoodsUseCase,
+    private val searchSavedMealsUseCase: SearchSavedMealsUseCase,
     private val createDiaryEntryUseCase: CreateDiaryEntryUseCase
 ) : ViewModel() {
 
@@ -89,15 +95,24 @@ class AddDiaryEntryViewModel @Inject constructor(
     private var searchJob: Job? = null
 
     init {
-        loadRecentFoods()
+        loadRecentItems()
     }
 
-    private fun loadRecentFoods() {
+    private fun loadRecentItems() {
+        // Load recent foods
         searchFoodsUseCase(FoodFilter(query = "", type = FoodFilterType.ALL, limit = 10))
             .onEach { foods ->
                 _uiState.update { it.copy(recentFoods = foods) }
             }
             .catch { /* Ignore errors for recent foods */ }
+            .launchIn(viewModelScope)
+
+        // Load recent saved meals
+        searchSavedMealsUseCase("", limit = 5)
+            .onEach { meals ->
+                _uiState.update { it.copy(recentMeals = meals) }
+            }
+            .catch { /* Ignore errors for recent meals */ }
             .launchIn(viewModelScope)
     }
 
@@ -108,13 +123,14 @@ class AddDiaryEntryViewModel @Inject constructor(
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             if (query.isBlank()) {
-                _uiState.update { it.copy(searchResults = emptyList(), isSearching = false) }
+                _uiState.update { it.copy(searchResults = emptyList(), savedMealResults = emptyList(), isSearching = false) }
                 return@launch
             }
 
             delay(300) // Debounce
             _uiState.update { it.copy(isSearching = true) }
 
+            // Search foods
             searchFoodsUseCase(FoodFilter(query = query, type = FoodFilterType.ALL, limit = 50))
                 .onEach { foods ->
                     _uiState.update { it.copy(searchResults = foods, isSearching = false) }
@@ -122,6 +138,14 @@ class AddDiaryEntryViewModel @Inject constructor(
                 .catch { error ->
                     _uiState.update { it.copy(isSearching = false, error = error.message) }
                 }
+                .launchIn(this)
+
+            // Search saved meals
+            searchSavedMealsUseCase(query, limit = 20)
+                .onEach { meals ->
+                    _uiState.update { it.copy(savedMealResults = meals) }
+                }
+                .catch { /* Ignore meal search errors */ }
                 .launchIn(this)
         }
     }
@@ -137,6 +161,15 @@ class AddDiaryEntryViewModel @Inject constructor(
             )
         }
         recalculateNutrition()
+    }
+
+    fun onMealSelected(meal: SavedMeal) {
+        val state = _uiState.value
+        _events.value = AddDiaryEntryEvent.NavigateToMealPreview(
+            savedMealId = meal.id,
+            date = state.date.toString(),
+            mealType = state.mealType.apiValue
+        )
     }
 
     fun onServingSizeChange(size: String) {

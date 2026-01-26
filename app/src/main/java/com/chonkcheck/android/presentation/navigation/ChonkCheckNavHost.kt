@@ -32,6 +32,8 @@ import com.chonkcheck.android.presentation.ui.diary.addentry.AddDiaryEntryScreen
 import com.chonkcheck.android.presentation.ui.foods.FoodFormScreen
 import com.chonkcheck.android.presentation.ui.foods.FoodsScreen
 import com.chonkcheck.android.presentation.ui.onboarding.OnboardingScreen
+import com.chonkcheck.android.presentation.ui.meals.SavedMealFormScreen
+import com.chonkcheck.android.presentation.ui.meals.SavedMealPreviewScreen
 import com.chonkcheck.android.presentation.ui.recipes.RecipeFormScreen
 import com.chonkcheck.android.presentation.ui.recipes.RecipesScreen
 import com.chonkcheck.android.presentation.ui.scanner.BarcodeScannerScreen
@@ -173,6 +175,12 @@ fun ChonkCheckNavHost(
                     },
                     onNavigateToEditRecipe = { recipeId ->
                         navController.navigate(Screen.EditRecipe.createRoute(recipeId))
+                    },
+                    onNavigateToCreateMeal = {
+                        navController.navigate(Screen.CreateSavedMeal.route)
+                    },
+                    onNavigateToEditMeal = { mealId ->
+                        navController.navigate(Screen.EditSavedMeal.createRoute(mealId))
                     }
                 )
             }
@@ -270,7 +278,10 @@ fun ChonkCheckNavHost(
                     onNavigateToBarcodeScanner = {
                         navController.navigate(Screen.BarcodeScanner.route)
                     },
-                    onFoodAdded = { navController.popBackStack() }
+                    onFoodAdded = { navController.popBackStack() },
+                    onNavigateToMealPreview = { savedMealId, date, mealType ->
+                        navController.navigate(Screen.SavedMealPreview.createRoute(savedMealId, date, mealType))
+                    }
                 )
             }
 
@@ -312,8 +323,35 @@ fun ChonkCheckNavHost(
                 )
             }
 
-            composable(Screen.SavedMeals.route) {
-                PlaceholderScreen("Saved Meals")
+            composable(Screen.CreateSavedMeal.route) {
+                SavedMealFormScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Screen.EditSavedMeal.route,
+                arguments = listOf(
+                    navArgument(NavArgs.SAVED_MEAL_ID) { type = NavType.StringType }
+                )
+            ) {
+                SavedMealFormScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Screen.SavedMealPreview.route,
+                arguments = listOf(
+                    navArgument(NavArgs.SAVED_MEAL_ID) { type = NavType.StringType },
+                    navArgument(NavArgs.DATE) { type = NavType.StringType },
+                    navArgument(NavArgs.MEAL_TYPE) { type = NavType.StringType }
+                )
+            ) {
+                SavedMealPreviewScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onMealAdded = { navController.popBackStack() }
+                )
             }
 
             composable(Screen.Weight.route) {

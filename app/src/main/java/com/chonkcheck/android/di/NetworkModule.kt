@@ -4,6 +4,7 @@ import com.chonkcheck.android.BuildConfig
 import com.chonkcheck.android.data.api.DiaryApi
 import com.chonkcheck.android.data.api.FoodApi
 import com.chonkcheck.android.data.api.RecipeApi
+import com.chonkcheck.android.data.api.SavedMealApi
 import com.chonkcheck.android.data.api.UserApi
 import com.chonkcheck.android.data.api.WeightApi
 import com.chonkcheck.android.data.api.interceptor.AuthInterceptor
@@ -91,4 +92,9 @@ object NetworkModule {
     @Singleton
     fun provideUserApi(retrofit: Retrofit): UserApi =
         retrofit.create(UserApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideSavedMealApi(retrofit: Retrofit): SavedMealApi =
+        retrofit.create(SavedMealApi::class.java)
 }
