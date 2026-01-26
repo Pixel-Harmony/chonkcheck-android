@@ -25,8 +25,8 @@ Build the ChonkCheck Android app from scratch to achieve full feature parity wit
 | 8 | Barcode Scanning | ✅ Complete |
 | 9 | Diary Core | ✅ Complete |
 | 10 | Weight Tracking | ✅ Complete |
-| 11 | Recipes Feature | ⏳ Pending |
-| 12 | Saved Meals | ⏳ Pending |
+| 11 | Recipes Feature | ✅ Complete |
+| 12 | Saved Meals | ✅ Complete |
 | 13 | Exercise Tracking | ⏳ Pending |
 | 14 | Nutrition Label Scanner | ⏳ Pending |
 | 15 | Settings & Profile | ⏳ Pending |
@@ -543,7 +543,7 @@ presentation/ui/weight/
 
 ---
 
-### Phase 11: Recipes Feature ⏳
+### Phase 11: Recipes Feature ✅
 
 **Goal**: Build recipe management with nutrition calculation.
 
@@ -609,7 +609,7 @@ presentation/ui/recipes/
 
 ---
 
-### Phase 12: Saved Meals ⏳
+### Phase 12: Saved Meals ✅
 
 **Goal**: Implement saved meal groups for quick logging.
 
