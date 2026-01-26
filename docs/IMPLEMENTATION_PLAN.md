@@ -29,7 +29,7 @@ Build the ChonkCheck Android app from scratch to achieve full feature parity wit
 | 12 | Saved Meals | ✅ Complete |
 | 13 | Exercise Tracking | ✅ Complete |
 | 14 | Nutrition Label Scanner | ✅ Complete |
-| 15 | Settings & Profile | ⏳ Pending |
+| 15 | Settings & Profile | ✅ Complete |
 | 16 | Dashboard / Home Screen | ✅ Complete |
 | 17 | Sync Engine & Offline Support | ⏳ Pending |
 | 18 | Polish, Analytics & Release Prep | ⏳ Pending |
@@ -721,7 +721,7 @@ presentation/ui/scanner/
 
 ---
 
-### Phase 15: Settings & Profile ⏳
+### Phase 15: Settings & Profile ✅
 
 **Goal**: Build settings screens with all user preferences.
 
@@ -781,13 +781,35 @@ presentation/ui/scanner/
 - Button: "Delete My Account"
 - Confirmation: Type "DELETE" to confirm
 
-**Files to Create**:
+**Files Created**:
 ```
-domain/usecase/UpdateProfileUseCase.kt, UpdateGoalsUseCase.kt, ExportUserDataUseCase.kt
+domain/repository/SettingsRepository.kt
+domain/usecase/CalculateTdeeUseCase.kt
+data/repository/SettingsRepositoryImpl.kt
+data/mappers/WeightMappers.kt (updated with unit conversion)
 presentation/ui/settings/
-  SettingsScreen.kt, ProfileScreen.kt, GoalsScreen.kt, PrivacyScreen.kt
-  components/SettingsItem.kt, SettingsSection.kt
+  SettingsScreen.kt, SettingsViewModel.kt
+  components/AccountSection.kt, PreferencesSection.kt, BodyGoalsSection.kt,
+            PrivacyDataSection.kt, DangerZoneSection.kt, CollapsibleSection.kt,
+            DeleteAccountDialog.kt
+presentation/ui/weight/components/WeightUnitConverter.kt (updated with rounding fix)
 ```
+
+**Key Features Implemented**:
+- 5 collapsible sections: Account, Preferences, Body & Goals, Privacy & Data, Danger Zone
+- Theme toggle (System/Light/Dark) with DataStore persistence
+- Weight/Height unit preferences with proper conversions
+- Birth date picker with age calculation
+- Sex and Activity level selection
+- TDEE preview card with real-time recalculation
+- Weight goal selection with weekly rate options
+- Diet preset selection (synced to API)
+- Daily macro goals inputs with change detection
+- Data export via FileProvider share intent
+- Weight saving from settings (creates weight entry)
+- Sign out and delete account functionality
+- Weight unit conversion fix (API returns total lbs for "st" unit)
+- Stone/pound rounding fix (round instead of truncate)
 
 ---
 
