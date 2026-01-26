@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chonkcheck.android.domain.model.FoodType
+import com.chonkcheck.android.domain.model.NutritionLabelData
 import com.chonkcheck.android.domain.model.ServingUnit
 import com.chonkcheck.android.presentation.ui.components.LoadingIndicator
 import com.chonkcheck.android.ui.theme.Amber
@@ -66,6 +67,7 @@ fun FoodFormScreen(
     onNavigateToBarcodeScanner: () -> Unit,
     onNavigateToLabelScanner: () -> Unit,
     scannedBarcode: String? = null,
+    scannedLabelData: NutritionLabelData? = null,
     modifier: Modifier = Modifier,
     viewModel: FoodFormViewModel = hiltViewModel()
 ) {
@@ -78,6 +80,25 @@ fun FoodFormScreen(
             if (barcode.isNotBlank()) {
                 viewModel.onBarcodeScanned(barcode)
             }
+        }
+    }
+
+    // Process scanned nutrition label data when returning from scanner
+    LaunchedEffect(scannedLabelData) {
+        scannedLabelData?.let { data ->
+            viewModel.onNutritionLabelScanned(
+                name = data.name,
+                brand = data.brand,
+                servingSize = data.servingSize,
+                servingUnit = data.servingUnit,
+                calories = data.calories,
+                protein = data.protein,
+                carbs = data.carbs,
+                fat = data.fat,
+                fiber = data.fiber,
+                sugar = data.sugar,
+                sodium = data.sodium
+            )
         }
     }
 

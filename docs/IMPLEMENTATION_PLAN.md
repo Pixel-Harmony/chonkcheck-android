@@ -27,8 +27,8 @@ Build the ChonkCheck Android app from scratch to achieve full feature parity wit
 | 10 | Weight Tracking | ✅ Complete |
 | 11 | Recipes Feature | ✅ Complete |
 | 12 | Saved Meals | ✅ Complete |
-| 13 | Exercise Tracking | ⏳ Pending |
-| 14 | Nutrition Label Scanner | ⏳ Pending |
+| 13 | Exercise Tracking | ✅ Complete |
+| 14 | Nutrition Label Scanner | ✅ Complete |
 | 15 | Settings & Profile | ⏳ Pending |
 | 16 | Dashboard / Home Screen | ✅ Complete |
 | 17 | Sync Engine & Offline Support | ⏳ Pending |
@@ -670,7 +670,7 @@ presentation/ui/savedmeals/
 
 ---
 
-### Phase 13: Exercise Tracking ⏳
+### Phase 13: Exercise Tracking ✅
 
 **Goal**: Add exercise logging for calories burned.
 
@@ -679,35 +679,42 @@ presentation/ui/savedmeals/
 - Log exercise with calories burned
 - Net calories calculation (food - exercise)
 
-**Files to Create**:
+**Files Created**:
 ```
 domain/model/Exercise.kt, ExerciseEntry.kt
-domain/usecase/LogExerciseUseCase.kt, GetExerciseEntriesUseCase.kt
-data/api/ExerciseApi.kt, repository/ExerciseRepositoryImpl.kt
-presentation/ui/exercise/LogExerciseSheet.kt
+domain/repository/ExerciseRepository.kt
+domain/usecase/CreateExerciseUseCase.kt, GetExercisesUseCase.kt, UpdateExerciseUseCase.kt, DeleteExerciseUseCase.kt
+data/api/ExerciseApi.kt, dto/ExerciseDtos.kt
+data/db/entity/ExerciseEntity.kt, dao/ExerciseDao.kt
+data/repository/ExerciseRepositoryImpl.kt
+data/mappers/ExerciseMappers.kt
+presentation/ui/exercise/ExerciseFormScreen.kt, ExerciseFormViewModel.kt
+presentation/ui/diary/ (updated with exercise section and net calories)
 ```
 
 ---
 
-### Phase 14: Nutrition Label Scanner ⏳
+### Phase 14: Nutrition Label Scanner ✅
 
 **Goal**: Camera capture with backend AI parsing (Claude Haiku via API).
 
 **Deliverables**:
 - Camera capture for nutrition labels (CameraX)
-- Image encoding (base64 or multipart)
+- Image encoding (base64)
 - POST to `/nutrition-labels` API endpoint (backend uses Claude Haiku)
 - Receive parsed nutrition data
 - Pre-fill create food form with results
 
-**Files to Create**:
+**Files Created**:
 ```
 data/api/NutritionLabelApi.kt
-data/api/dto/NutritionLabelRequest.kt, NutritionLabelResponse.kt
+data/api/dto/NutritionLabelDtos.kt
+domain/model/NutritionLabelResult.kt
 domain/usecase/ScanNutritionLabelUseCase.kt
+data/mappers/NutritionLabelMappers.kt
+core/util/ImageUtils.kt
 presentation/ui/scanner/
-  NutritionLabelScannerScreen.kt, NutritionLabelViewModel.kt
-  components/CapturePreview.kt, ImageCropper.kt
+  NutritionLabelScannerScreen.kt, NutritionLabelScannerViewModel.kt
 ```
 
 **Note**: No on-device ML Kit text recognition needed. The backend API handles AI parsing with Claude Haiku, returning structured nutrition data.

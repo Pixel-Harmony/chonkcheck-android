@@ -25,6 +25,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.chonkcheck.android.domain.model.MealType
+import com.chonkcheck.android.domain.model.NutritionLabelData
 import com.chonkcheck.android.presentation.ui.auth.LoginScreen
 import com.chonkcheck.android.presentation.ui.dashboard.DashboardScreen
 import com.chonkcheck.android.presentation.ui.diary.DiaryScreen
@@ -199,10 +200,14 @@ fun ChonkCheckNavHost(
             composable(Screen.CreateFood.route) { backStackEntry ->
                 // Get scanned barcode from saved state handle
                 val scannedBarcode = backStackEntry.savedStateHandle.get<String>("scanned_barcode")
+                val scannedLabelData = backStackEntry.savedStateHandle.get<NutritionLabelData>("scanned_label_data")
 
                 // Clear the saved state after reading
                 if (scannedBarcode != null) {
                     backStackEntry.savedStateHandle.remove<String>("scanned_barcode")
+                }
+                if (scannedLabelData != null) {
+                    backStackEntry.savedStateHandle.remove<NutritionLabelData>("scanned_label_data")
                 }
 
                 FoodFormScreen(
@@ -217,7 +222,8 @@ fun ChonkCheckNavHost(
                     onNavigateToLabelScanner = {
                         navController.navigate(Screen.NutritionLabelScanner.route)
                     },
-                    scannedBarcode = scannedBarcode
+                    scannedBarcode = scannedBarcode,
+                    scannedLabelData = scannedLabelData
                 )
             }
 
@@ -229,10 +235,14 @@ fun ChonkCheckNavHost(
             ) { backStackEntry ->
                 // Get scanned barcode from saved state handle
                 val scannedBarcode = backStackEntry.savedStateHandle.get<String>("scanned_barcode")
+                val scannedLabelData = backStackEntry.savedStateHandle.get<NutritionLabelData>("scanned_label_data")
 
                 // Clear the saved state after reading
                 if (scannedBarcode != null) {
                     backStackEntry.savedStateHandle.remove<String>("scanned_barcode")
+                }
+                if (scannedLabelData != null) {
+                    backStackEntry.savedStateHandle.remove<NutritionLabelData>("scanned_label_data")
                 }
 
                 FoodFormScreen(
@@ -248,7 +258,8 @@ fun ChonkCheckNavHost(
                     onNavigateToLabelScanner = {
                         navController.navigate(Screen.NutritionLabelScanner.route)
                     },
-                    scannedBarcode = scannedBarcode
+                    scannedBarcode = scannedBarcode,
+                    scannedLabelData = scannedLabelData
                 )
             }
 
@@ -269,7 +280,9 @@ fun ChonkCheckNavHost(
             composable(Screen.NutritionLabelScanner.route) {
                 NutritionLabelScannerScreen(
                     onLabelScanned = { nutritionData ->
-                        // TODO: Pass nutrition data back when API is implemented
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("scanned_label_data", nutritionData)
                         navController.popBackStack()
                     },
                     onNavigateBack = { navController.popBackStack() }
