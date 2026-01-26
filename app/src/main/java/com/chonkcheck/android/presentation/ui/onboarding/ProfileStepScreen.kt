@@ -225,7 +225,7 @@ fun ProfileStepScreen(
                     currentWeightKg?.let {
                         val totalLb = it * 2.20462
                         val st = (totalLb / 14).toInt()
-                        val lb = (totalLb % 14).toInt()
+                        val lb = kotlin.math.round(totalLb % 14).toInt()
                         st to lb
                     } ?: (null to null)
                 }

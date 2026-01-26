@@ -2,6 +2,7 @@ package com.chonkcheck.android.presentation.ui.weight.components
 
 import com.chonkcheck.android.domain.model.WeightUnit
 import kotlin.math.floor
+import kotlin.math.round
 
 object WeightUnitConverter {
     private const val LB_PER_KG = 2.20462
@@ -32,7 +33,7 @@ object WeightUnitConverter {
                 val totalStones = kg / KG_PER_STONE
                 val stones = floor(totalStones).toInt()
                 val remainderKg = kg - (stones * KG_PER_STONE)
-                val pounds = (remainderKg * LB_PER_KG).toInt()
+                val pounds = round(remainderKg * LB_PER_KG).toInt()
                 "$stones st $pounds lb"
             }
         }
@@ -65,7 +66,7 @@ object WeightUnitConverter {
         val totalStones = kg / KG_PER_STONE
         val stones = floor(totalStones).toInt()
         val remainderKg = kg - (stones * KG_PER_STONE)
-        val pounds = (remainderKg * LB_PER_KG).toInt()
+        val pounds = round(remainderKg * LB_PER_KG).toInt()
         return Pair(stones, pounds)
     }
 

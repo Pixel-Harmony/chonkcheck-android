@@ -28,8 +28,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.io.File
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import com.chonkcheck.android.domain.model.ActivityLevel
 import com.chonkcheck.android.domain.model.DietPreset
 import com.chonkcheck.android.domain.model.HeightUnit
@@ -60,6 +64,44 @@ fun SettingsScreen(
     LaunchedEffect(uiState.isLoggedOut, uiState.isDeleted) {
         if (uiState.isLoggedOut || uiState.isDeleted) {
             onLoggedOut()
+        }
+    }
+
+    // Handle exported data - share via intent
+    LaunchedEffect(uiState.exportedData) {
+        uiState.exportedData?.let { jsonData ->
+            try {
+                // Create a temp file in cache directory
+                val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm"))
+                val fileName = "ChonkCheck-export-$timestamp.json"
+                val file = File(context.cacheDir, fileName)
+                file.writeText(jsonData)
+
+                // Get URI via FileProvider
+                val uri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    file
+                )
+
+                // Create share intent
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/json"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+
+                context.startActivity(Intent.createChooser(shareIntent, "Export Data"))
+                viewModel.clearExportedData()
+            } catch (e: Exception) {
+                // If file sharing fails, fall back to sharing as text
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, jsonData)
+                }
+                context.startActivity(Intent.createChooser(shareIntent, "Export Data"))
+                viewModel.clearExportedData()
+            }
         }
     }
 
@@ -261,7 +303,8 @@ private fun SettingsScreenContent(
                 ) {
                     PrivacyDataSection(
                         onExportData = onExportData,
-                        onPrivacyPolicy = onPrivacyPolicy
+                        onPrivacyPolicy = onPrivacyPolicy,
+                        isExporting = uiState.isExporting
                     )
                 }
 

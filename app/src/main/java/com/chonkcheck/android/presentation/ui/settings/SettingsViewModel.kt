@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chonkcheck.android.domain.model.ActivityLevel
+import com.chonkcheck.android.domain.model.CreateWeightParams
 import com.chonkcheck.android.domain.model.DietPreset
 import com.chonkcheck.android.domain.model.HeightUnit
 import com.chonkcheck.android.domain.model.MacroTargets
@@ -14,6 +15,7 @@ import com.chonkcheck.android.domain.model.WeightGoal
 import com.chonkcheck.android.domain.model.WeightUnit
 import com.chonkcheck.android.domain.repository.AuthRepository
 import com.chonkcheck.android.domain.repository.SettingsRepository
+import com.chonkcheck.android.domain.repository.WeightRepository
 import com.chonkcheck.android.domain.usecase.CalculateTdeeUseCase
 import com.chonkcheck.android.domain.usecase.GetWeightEntriesUseCase
 import com.chonkcheck.android.domain.usecase.TdeeResult
@@ -37,6 +39,8 @@ data class SettingsUiState(
     val themePreference: ThemePreference = ThemePreference.SYSTEM,
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
+    val isExporting: Boolean = false,
+    val exportedData: String? = null,
     val showDeleteConfirmation: Boolean = false,
     val errorMessage: String? = null,
     val successMessage: String? = null,
@@ -51,6 +55,7 @@ data class SettingsUiState(
     val editSex: Sex? = null,
     val editActivityLevel: ActivityLevel? = null,
     val editCurrentWeightKg: Double? = null,
+    val originalCurrentWeightKg: Double? = null,
     val editWeightGoal: WeightGoal? = null,
     val editTargetWeightKg: Double? = null,
     val editWeeklyGoalKg: Double? = null,
@@ -85,6 +90,7 @@ data class SettingsUiState(
                 editBirthDate?.toString() != userProfile?.birthDate ||
                 editSex != userProfile?.sex ||
                 editActivityLevel != userProfile?.activityLevel ||
+                editCurrentWeightKg != originalCurrentWeightKg ||
                 editWeightGoal != userGoals?.weightGoal ||
                 editTargetWeightKg != userGoals?.targetWeight ||
                 editWeeklyGoalKg != userGoals?.weeklyGoal ||
@@ -100,6 +106,7 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val settingsRepository: SettingsRepository,
+    private val weightRepository: WeightRepository,
     private val calculateTdeeUseCase: CalculateTdeeUseCase,
     private val getWeightEntriesUseCase: GetWeightEntriesUseCase
 ) : ViewModel() {
@@ -175,6 +182,7 @@ class SettingsViewModel @Inject constructor(
                 editSex = profile?.sex,
                 editActivityLevel = profile?.activityLevel,
                 editCurrentWeightKg = currentWeight,
+                originalCurrentWeightKg = currentWeight,
                 editWeightGoal = goals?.weightGoal,
                 editTargetWeightKg = goals?.targetWeight,
                 editWeeklyGoalKg = goals?.weeklyGoal,
@@ -410,7 +418,8 @@ class SettingsViewModel @Inject constructor(
                 carbsTarget = state.editCarbs,
                 fatTarget = state.editFat,
                 bmr = state.tdeePreview?.bmr,
-                tdee = state.tdeePreview?.tdee
+                tdee = state.tdeePreview?.tdee,
+                dietPreset = state.editDietPreset
             )
 
             if (goalsResult.isFailure) {
@@ -421,6 +430,31 @@ class SettingsViewModel @Inject constructor(
                     )
                 }
                 return@launch
+            }
+
+            // Save weight if it changed
+            if (state.editCurrentWeightKg != null &&
+                state.editCurrentWeightKg != state.originalCurrentWeightKg
+            ) {
+                val weightResult = weightRepository.createEntry(
+                    CreateWeightParams(
+                        weight = state.editCurrentWeightKg,
+                        date = LocalDate.now()
+                    )
+                )
+
+                if (weightResult.isFailure) {
+                    _uiState.update {
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = weightResult.exceptionOrNull()?.message ?: "Failed to save weight"
+                        )
+                    }
+                    return@launch
+                }
+
+                // Update originalCurrentWeightKg so further saves don't re-create entry
+                _uiState.update { it.copy(originalCurrentWeightKg = state.editCurrentWeightKg) }
             }
 
             _uiState.update {
@@ -441,27 +475,30 @@ class SettingsViewModel @Inject constructor(
 
     fun exportData() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isExporting = true) }
 
             settingsRepository.exportUserData()
                 .onSuccess { data ->
                     _uiState.update {
                         it.copy(
-                            isLoading = false,
-                            successMessage = "Data exported successfully"
+                            isExporting = false,
+                            exportedData = data
                         )
                     }
-                    // Data handling (download/share) would be implemented in the UI
                 }
                 .onFailure { error ->
                     _uiState.update {
                         it.copy(
-                            isLoading = false,
+                            isExporting = false,
                             errorMessage = error.message ?: "Failed to export data"
                         )
                     }
                 }
         }
+    }
+
+    fun clearExportedData() {
+        _uiState.update { it.copy(exportedData = null) }
     }
 
     fun showDeleteConfirmation() {

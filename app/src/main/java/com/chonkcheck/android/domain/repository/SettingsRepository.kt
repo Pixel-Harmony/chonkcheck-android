@@ -38,7 +38,8 @@ interface SettingsRepository {
         carbsTarget: Int,
         fatTarget: Int,
         bmr: Int?,
-        tdee: Int?
+        tdee: Int?,
+        dietPreset: DietPreset? = null
     ): Result<User>
 
     suspend fun exportUserData(): Result<String>

@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -19,14 +21,25 @@ import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 fun PrivacyDataSection(
     onExportData: () -> Unit,
     onPrivacyPolicy: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isExporting: Boolean = false
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         OutlinedButton(
             onClick = onExportData,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isExporting
         ) {
-            Text("Export My Data")
+            if (isExporting) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.size(8.dp))
+                Text("Exporting...")
+            } else {
+                Text("Export My Data")
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))

@@ -120,7 +120,8 @@ class SettingsRepositoryImpl @Inject constructor(
         carbsTarget: Int,
         fatTarget: Int,
         bmr: Int?,
-        tdee: Int?
+        tdee: Int?,
+        dietPreset: DietPreset?
     ): Result<User> {
         return try {
             val currentUser = userDao.getCurrentUserOnce()
@@ -151,7 +152,8 @@ class SettingsRepositoryImpl @Inject constructor(
                             fat = fatTarget
                         ),
                         weightGoal = weightGoal?.toApiValue(),
-                        weightGoalRate = weeklyGoal?.let { kotlin.math.abs(it) }
+                        weightGoalRate = weeklyGoal?.let { kotlin.math.abs(it) },
+                        dietPreset = dietPreset?.toApiValue()
                     )
                 )
             } catch (e: Exception) {
