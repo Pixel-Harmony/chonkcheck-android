@@ -13,7 +13,17 @@ fun <T> Flow<T>.asResult(): Flow<Result<T>> = this
 
 fun Double.formatCalories(): String = "%.0f".format(this)
 
-fun Double.formatMacro(): String = "%.1f".format(this)
+/**
+ * Formats a macro value for display.
+ * Returns an integer string if the value is a whole number, otherwise shows one decimal place.
+ */
+fun Double.formatMacro(): String {
+    return if (this == this.toLong().toDouble()) {
+        this.toLong().toString()
+    } else {
+        "%.1f".format(this)
+    }
+}
 
 fun Double.formatWeight(isMetric: Boolean): String {
     return if (isMetric) {

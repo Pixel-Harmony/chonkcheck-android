@@ -10,8 +10,6 @@ import com.chonkcheck.android.domain.model.FoodSource
 import com.chonkcheck.android.domain.model.FoodType
 import com.chonkcheck.android.domain.model.ServingUnit
 import com.chonkcheck.android.domain.model.UpdateFoodParams
-import java.time.Instant
-import java.time.format.DateTimeFormatter
 
 fun FoodDto.toEntity(): FoodEntity = FoodEntity(
     id = id,
@@ -170,29 +168,6 @@ fun UpdateFoodParams.toRequest(): UpdateFoodRequest = UpdateFoodRequest(
     imageUrl = imageUrl
 )
 
-private fun String.toServingUnit(): ServingUnit = when (this.lowercase()) {
-    "g", "gram" -> ServingUnit.GRAM
-    "ml", "milliliter" -> ServingUnit.MILLILITER
-    "oz", "ounce" -> ServingUnit.OUNCE
-    "cup" -> ServingUnit.CUP
-    "tbsp", "tablespoon" -> ServingUnit.TABLESPOON
-    "tsp", "teaspoon" -> ServingUnit.TEASPOON
-    "piece" -> ServingUnit.PIECE
-    "slice" -> ServingUnit.SLICE
-    else -> ServingUnit.GRAM
-}
-
-private fun ServingUnit.toApiValue(): String = when (this) {
-    ServingUnit.GRAM -> "g"
-    ServingUnit.MILLILITER -> "ml"
-    ServingUnit.OUNCE -> "oz"
-    ServingUnit.CUP -> "cup"
-    ServingUnit.TABLESPOON -> "tbsp"
-    ServingUnit.TEASPOON -> "tsp"
-    ServingUnit.PIECE -> "piece"
-    ServingUnit.SLICE -> "slice"
-}
-
 private fun String.toFoodType(): FoodType = when (this.lowercase()) {
     "platform" -> FoodType.PLATFORM
     "user" -> FoodType.USER
@@ -203,18 +178,4 @@ private fun String.toFoodSource(): FoodSource? = when (this.lowercase()) {
     "user_submitted" -> FoodSource.USER_SUBMITTED
     "open_food_facts" -> FoodSource.OPEN_FOOD_FACTS
     else -> null
-}
-
-private fun String.parseTimestamp(): Long? {
-    return try {
-        Instant.parse(this).toEpochMilli()
-    } catch (e: Exception) {
-        try {
-            DateTimeFormatter.ISO_DATE_TIME.parse(this) { temporal ->
-                Instant.from(temporal).toEpochMilli()
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
 }

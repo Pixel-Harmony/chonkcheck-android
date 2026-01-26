@@ -30,6 +30,7 @@ import com.chonkcheck.android.domain.model.SavedMeal
 import com.chonkcheck.android.domain.model.SavedMealItem
 import com.chonkcheck.android.domain.model.SavedMealItemType
 import com.chonkcheck.android.domain.model.ServingUnit
+import com.chonkcheck.android.core.util.formatMacro
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.Purple
 
@@ -128,13 +129,6 @@ fun SavedMealCard(
     }
 }
 
-private fun Double.formatMacro(): String {
-    return if (this == this.toLong().toDouble()) {
-        this.toLong().toString()
-    } else {
-        String.format("%.1f", this)
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.chonkcheck.android.domain.model.Recipe
 import com.chonkcheck.android.domain.model.RecipeServingUnit
+import com.chonkcheck.android.core.util.formatMacro
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.ChonkGreen
 
@@ -124,13 +125,6 @@ fun RecipeCard(
     }
 }
 
-private fun Double.formatMacro(): String {
-    return if (this == this.toLong().toDouble()) {
-        this.toLong().toString()
-    } else {
-        String.format("%.1f", this)
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

@@ -7,10 +7,6 @@ import com.chonkcheck.android.domain.model.CreateDiaryEntryParams
 import com.chonkcheck.android.domain.model.DiaryEntry
 import com.chonkcheck.android.domain.model.MealType
 import com.chonkcheck.android.domain.model.ServingUnit
-import java.time.Instant
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 
 fun DiaryEntryDto.toEntity(userId: String): DiaryEntryEntity = DiaryEntryEntity(
     id = id,
@@ -87,49 +83,3 @@ fun CreateDiaryEntryParams.toRequest(): CreateDiaryEntryRequest = CreateDiaryEnt
     enteredAmount = servingSize
 )
 
-private fun String.toServingUnit(): ServingUnit = when (this.lowercase()) {
-    "g", "gram" -> ServingUnit.GRAM
-    "ml", "milliliter" -> ServingUnit.MILLILITER
-    "oz", "ounce" -> ServingUnit.OUNCE
-    "cup" -> ServingUnit.CUP
-    "tbsp", "tablespoon" -> ServingUnit.TABLESPOON
-    "tsp", "teaspoon" -> ServingUnit.TEASPOON
-    "piece" -> ServingUnit.PIECE
-    "slice" -> ServingUnit.SLICE
-    else -> ServingUnit.GRAM
-}
-
-private fun ServingUnit.toApiValue(): String = when (this) {
-    ServingUnit.GRAM -> "g"
-    ServingUnit.MILLILITER -> "ml"
-    ServingUnit.OUNCE -> "oz"
-    ServingUnit.CUP -> "cup"
-    ServingUnit.TABLESPOON -> "tbsp"
-    ServingUnit.TEASPOON -> "tsp"
-    ServingUnit.PIECE -> "piece"
-    ServingUnit.SLICE -> "slice"
-}
-
-private fun String.toLocalDate(): LocalDate {
-    return try {
-        LocalDate.parse(this)
-    } catch (e: DateTimeParseException) {
-        LocalDate.now()
-    }
-}
-
-private fun LocalDate.toApiDate(): String = this.toString()
-
-private fun String.parseTimestamp(): Long? {
-    return try {
-        Instant.parse(this).toEpochMilli()
-    } catch (e: Exception) {
-        try {
-            DateTimeFormatter.ISO_DATE_TIME.parse(this) { temporal ->
-                Instant.from(temporal).toEpochMilli()
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
-}

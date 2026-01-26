@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -23,7 +22,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chonkcheck.android.domain.model.FoodFilterType
 import com.chonkcheck.android.domain.model.Recipe
+import com.chonkcheck.android.presentation.ui.components.DeleteConfirmationDialog
 import com.chonkcheck.android.domain.model.RecipeServingUnit
 import com.chonkcheck.android.presentation.ui.components.LoadingIndicator
 import com.chonkcheck.android.presentation.ui.foods.components.FoodCard
@@ -432,38 +431,11 @@ private fun FoodsContent(
 
     // Delete confirmation dialog
     if (uiState.deleteConfirmation != null) {
-        AlertDialog(
-            onDismissRequest = onDeleteCancel,
-            title = {
-                Text(
-                    text = "Delete food?",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.SemiBold
-                    )
-                )
-            },
-            text = {
-                Text(
-                    text = "This food will be removed from your list. Your past diary entries will remain intact.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = onDeleteConfirm,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDeleteCancel) {
-                    Text("Cancel")
-                }
-            }
+        DeleteConfirmationDialog(
+            title = "Delete food?",
+            message = "This food will be removed from your list. Your past diary entries will remain intact.",
+            onConfirm = onDeleteConfirm,
+            onDismiss = onDeleteCancel
         )
     }
 }
@@ -593,38 +565,11 @@ private fun RecipesContent(
 
     // Delete confirmation dialog
     if (uiState.deleteConfirmation != null) {
-        AlertDialog(
-            onDismissRequest = onDeleteCancel,
-            title = {
-                Text(
-                    text = "Delete recipe?",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.SemiBold
-                    )
-                )
-            },
-            text = {
-                Text(
-                    text = "This recipe will be removed. Your past diary entries using this recipe will remain intact.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = onDeleteConfirm,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDeleteCancel) {
-                    Text("Cancel")
-                }
-            }
+        DeleteConfirmationDialog(
+            title = "Delete recipe?",
+            message = "This recipe will be removed. Your past diary entries using this recipe will remain intact.",
+            onConfirm = onDeleteConfirm,
+            onDismiss = onDeleteCancel
         )
     }
 }
@@ -754,38 +699,11 @@ private fun MealsContent(
 
     // Delete confirmation dialog
     if (uiState.deleteConfirmation != null) {
-        AlertDialog(
-            onDismissRequest = onDeleteCancel,
-            title = {
-                Text(
-                    text = "Delete meal?",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.SemiBold
-                    )
-                )
-            },
-            text = {
-                Text(
-                    text = "This meal will be removed. Your past diary entries using this meal will remain intact.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = onDeleteConfirm,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDeleteCancel) {
-                    Text("Cancel")
-                }
-            }
+        DeleteConfirmationDialog(
+            title = "Delete meal?",
+            message = "This meal will be removed. Your past diary entries using this meal will remain intact.",
+            onConfirm = onDeleteConfirm,
+            onDismiss = onDeleteCancel
         )
     }
 }

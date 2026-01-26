@@ -5,10 +5,6 @@ import com.chonkcheck.android.data.api.dto.WeightEntryDto
 import com.chonkcheck.android.data.db.entity.WeightEntryEntity
 import com.chonkcheck.android.domain.model.CreateWeightParams
 import com.chonkcheck.android.domain.model.WeightEntry
-import java.time.Instant
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 
 fun WeightEntryDto.toEntity(userId: String): WeightEntryEntity = WeightEntryEntity(
     id = "weight_${date}_${userId}",
@@ -46,24 +42,3 @@ fun CreateWeightParams.toRequest(): CreateWeightRequest = CreateWeightRequest(
     notes = notes
 )
 
-private fun String.toLocalDate(): LocalDate {
-    return try {
-        LocalDate.parse(this)
-    } catch (e: DateTimeParseException) {
-        LocalDate.now()
-    }
-}
-
-private fun String.parseTimestamp(): Long? {
-    return try {
-        Instant.parse(this).toEpochMilli()
-    } catch (e: Exception) {
-        try {
-            DateTimeFormatter.ISO_DATE_TIME.parse(this) { temporal ->
-                Instant.from(temporal).toEpochMilli()
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
-}

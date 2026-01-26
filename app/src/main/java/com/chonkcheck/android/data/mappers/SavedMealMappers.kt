@@ -16,14 +16,10 @@ import com.chonkcheck.android.domain.model.SavedMealItemParams
 import com.chonkcheck.android.domain.model.SavedMealItemType
 import com.chonkcheck.android.domain.model.ServingUnit
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import java.time.Instant
-
-private val json = Json { ignoreUnknownKeys = true }
 
 // DTO -> Entity
 fun SavedMealDto.toEntity(): SavedMealEntity {
-    val itemsJson = json.encodeToString(
+    val itemsJson = mapperJson.encodeToString(
         items.map { it.toItemJson() }
     )
 
@@ -67,7 +63,7 @@ fun SavedMealItemDto.toItemJson(): SavedMealItemJson {
 // Entity -> Domain
 fun SavedMealEntity.toDomain(): SavedMeal {
     val itemsList = try {
-        json.decodeFromString<List<SavedMealItemJson>>(itemsJson)
+        mapperJson.decodeFromString<List<SavedMealItemJson>>(itemsJson)
     } catch (e: Exception) {
         emptyList()
     }
@@ -95,7 +91,7 @@ fun SavedMealItemJson.toDomain(): SavedMealItem {
         itemName = name,
         brand = brand,
         servingSize = servingSize,
-        servingUnit = servingUnit.toServingUnitSafe(),
+        servingUnit = servingUnit.toServingUnit(),
         quantity = numberOfServings,
         enteredAmount = enteredAmount,
         calories = calories,
@@ -154,7 +150,7 @@ fun CreateSavedMealParams.toEntity(
         userId = userId,
         name = name,
         description = null,
-        itemsJson = json.encodeToString(itemDetails),
+        itemsJson = mapperJson.encodeToString(itemDetails),
         totalCalories = totalCalories,
         totalProtein = totalProtein,
         totalCarbs = totalCarbs,
@@ -168,25 +164,3 @@ fun CreateSavedMealParams.toEntity(
     )
 }
 
-private fun String.toServingUnitSafe(): ServingUnit {
-    return when (this.lowercase()) {
-        "g", "gram" -> ServingUnit.GRAM
-        "ml", "milliliter" -> ServingUnit.MILLILITER
-        "oz", "ounce" -> ServingUnit.OUNCE
-        "cup" -> ServingUnit.CUP
-        "tbsp", "tablespoon" -> ServingUnit.TABLESPOON
-        "tsp", "teaspoon" -> ServingUnit.TEASPOON
-        "piece" -> ServingUnit.PIECE
-        "slice" -> ServingUnit.SLICE
-        "serving" -> ServingUnit.GRAM
-        else -> ServingUnit.GRAM
-    }
-}
-
-private fun String.parseTimestamp(): Long? {
-    return try {
-        Instant.parse(this).toEpochMilli()
-    } catch (e: Exception) {
-        null
-    }
-}

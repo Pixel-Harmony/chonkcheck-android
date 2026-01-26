@@ -15,13 +15,9 @@ import com.chonkcheck.android.domain.model.RecipeServingUnit
 import com.chonkcheck.android.domain.model.ServingUnit
 import com.chonkcheck.android.domain.model.UpdateRecipeParams
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import java.time.Instant
-
-private val json = Json { ignoreUnknownKeys = true }
 
 fun RecipeDto.toEntity(): RecipeEntity {
-    val ingredientsJson = json.encodeToString(
+    val ingredientsJson = mapperJson.encodeToString(
         ingredients.map { it.toIngredientJson() }
     )
 
@@ -65,7 +61,7 @@ fun RecipeIngredientDto.toIngredientJson(): RecipeIngredientJson {
 
 fun RecipeEntity.toDomain(): Recipe {
     val ingredientsList = try {
-        json.decodeFromString<List<RecipeIngredientJson>>(ingredientsJson)
+        mapperJson.decodeFromString<List<RecipeIngredientJson>>(ingredientsJson)
     } catch (e: Exception) {
         emptyList()
     }
@@ -163,7 +159,7 @@ fun CreateRecipeParams.toEntity(
         proteinPerServing = totalProtein / totalServings,
         carbsPerServing = totalCarbs / totalServings,
         fatPerServing = totalFat / totalServings,
-        ingredientsJson = json.encodeToString(ingredientDetails),
+        ingredientsJson = mapperJson.encodeToString(ingredientDetails),
         instructions = null,
         prepTimeMinutes = null,
         cookTimeMinutes = null,
@@ -197,24 +193,3 @@ private fun RecipeServingUnit.toApiValue(): String {
     }
 }
 
-private fun String.toServingUnit(): ServingUnit {
-    return when (this.lowercase()) {
-        "g", "gram" -> ServingUnit.GRAM
-        "ml", "milliliter" -> ServingUnit.MILLILITER
-        "oz", "ounce" -> ServingUnit.OUNCE
-        "cup" -> ServingUnit.CUP
-        "tbsp", "tablespoon" -> ServingUnit.TABLESPOON
-        "tsp", "teaspoon" -> ServingUnit.TEASPOON
-        "piece" -> ServingUnit.PIECE
-        "slice" -> ServingUnit.SLICE
-        else -> ServingUnit.GRAM
-    }
-}
-
-private fun String.parseTimestamp(): Long? {
-    return try {
-        Instant.parse(this).toEpochMilli()
-    } catch (e: Exception) {
-        null
-    }
-}

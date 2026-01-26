@@ -34,6 +34,7 @@ import com.chonkcheck.android.domain.model.ServingUnit
 import com.chonkcheck.android.ui.theme.Amber
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.ChonkGreen
+import com.chonkcheck.android.core.util.formatMacro
 import com.chonkcheck.android.ui.theme.Coral
 import com.chonkcheck.android.ui.theme.Teal
 
@@ -209,13 +210,6 @@ private fun Double.formatServing(): String {
     }
 }
 
-private fun Double.formatMacro(): String {
-    return if (this == this.toLong().toDouble()) {
-        this.toLong().toString()
-    } else {
-        String.format("%.1f", this)
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

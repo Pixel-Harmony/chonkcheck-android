@@ -446,6 +446,75 @@ suspend fun getFoods(query: String): Result<List<Food>> {
 - **No unused code** - Delete dead code, don't comment it out
 - **Small functions** - Keep functions focused, extract helpers
 
+## Code Quality & DRY Principles
+
+### When to Extract Shared Code
+
+Extract shared code when:
+- **Same logic appears 3+ times** - If you're copying code more than twice, create a utility
+- **Core business logic** - Timestamp parsing, unit conversions, formatting functions
+- **UI patterns used across screens** - Search bars, dialogs, card layouts
+
+**Example - Good extraction:**
+```kotlin
+// In MapperUtils.kt - used by 5+ mapper files
+fun String.parseTimestamp(): Long? {
+    return try {
+        Instant.parse(this).toEpochMilli()
+    } catch (e: Exception) {
+        null
+    }
+}
+```
+
+### When to Keep Code Separate
+
+Keep code separate when:
+- **Different domain contexts** - Each feature may have similar-looking but semantically different logic
+- **Likely to diverge** - If implementations will need different behavior in the future
+- **Meaningful differences exist** - Similar structure but different business rules
+
+**Example - Keep separate:**
+- ViewModels for different features (different business logic)
+- Screen composables (different filters, empty states, attribution)
+- Repository-specific operations (barcode lookup, ingredients, meal items)
+
+### Shared Utility Locations
+
+| Type | Location |
+|------|----------|
+| Mapper utilities | `data/mappers/MapperUtils.kt` |
+| General extensions | `core/util/Extensions.kt` |
+| Shared UI components | `presentation/ui/components/` |
+| Repository helpers | `data/repository/OfflineFirstHelper.kt` |
+
+### Available Shared Components
+
+| Component | Location | Usage |
+|-----------|----------|-------|
+| `DebouncedSearchBar` | `ui/components/` | Search with debounce, configurable accent color |
+| `DeleteConfirmationDialog` | `ui/components/` | Standard delete confirmation |
+| `NutritionItemCard` | `ui/components/` | Base layout for food/recipe/meal cards |
+| `LoadingIndicator` | `ui/components/` | Standard loading spinner |
+
+### Shared Mapper Utilities
+
+Use these from `MapperUtils.kt`:
+- `String.parseTimestamp()` - Parse ISO timestamps to epoch millis
+- `String.toServingUnit()` - Convert API string to ServingUnit enum
+- `ServingUnit.toApiValue()` - Convert enum to API string
+- `String.toLocalDate()` - Parse date strings
+- `LocalDate.toApiDate()` - Format dates for API
+- `mapperJson` - Shared Json instance with ignoreUnknownKeys
+
+### What NOT to Abstract
+
+Avoid over-abstracting:
+- **Base repository classes** - Each repository has unique operations
+- **DI modules** - Standard Hilt pattern, keep per-feature
+- **Use cases** - Domain-specific validation belongs in individual classes
+- **Screen composables** - Different content, filters, and empty states
+
 ## Dependency Management
 
 - **Always use latest versions** - When adding or updating dependencies, always check for the most recent stable version. Never use outdated dependencies.
