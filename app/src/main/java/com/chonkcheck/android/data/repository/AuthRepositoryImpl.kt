@@ -2,8 +2,10 @@ package com.chonkcheck.android.data.repository
 
 import android.app.Activity
 import android.util.Log
+import com.chonkcheck.android.data.api.UserApi
 import com.chonkcheck.android.data.auth.AuthManager
 import com.chonkcheck.android.data.db.dao.UserDao
+import com.chonkcheck.android.data.mappers.mergeWithApiProfile
 import com.chonkcheck.android.data.mappers.toDomain
 import com.chonkcheck.android.data.mappers.toEntity
 import com.chonkcheck.android.domain.model.AuthState
@@ -21,6 +23,7 @@ private const val TAG = "AuthRepository"
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val authManager: AuthManager,
+    private val userApi: UserApi,
     private val userDao: UserDao
 ) : AuthRepository {
 
@@ -103,7 +106,24 @@ class AuthRepositoryImpl @Inject constructor(
         try {
             val cachedUser = userDao.getCurrentUserOnce()
             if (cachedUser != null) {
+                // Show cached state immediately for fast startup
                 _authState.value = AuthState.Authenticated(cachedUser.toDomain())
+
+                // Sync with API in background to get latest onboarding status
+                try {
+                    val apiProfile = userApi.getUserProfile()
+                    val updatedEntity = cachedUser.mergeWithApiProfile(apiProfile)
+                    userDao.update(updatedEntity)
+
+                    // Re-emit if onboarding status changed (important for reinstall scenario)
+                    if (updatedEntity.onboardingCompleted != cachedUser.onboardingCompleted) {
+                        Log.d(TAG, "Onboarding status updated from API: ${updatedEntity.onboardingCompleted}")
+                        _authState.value = AuthState.Authenticated(updatedEntity.toDomain())
+                    }
+                } catch (e: Exception) {
+                    // Network failure is acceptable - we have cached data
+                    Log.w(TAG, "Failed to sync user profile from API", e)
+                }
             } else {
                 // No cached user but have credentials - require re-login to get fresh user info
                 _authState.value = AuthState.Unauthenticated

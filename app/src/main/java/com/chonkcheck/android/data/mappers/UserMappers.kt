@@ -1,6 +1,7 @@
 package com.chonkcheck.android.data.mappers
 
 import com.auth0.android.result.UserProfile
+import com.chonkcheck.android.data.api.dto.UserProfileDto
 import com.chonkcheck.android.data.db.entity.UserEntity
 import com.chonkcheck.android.domain.model.ActivityLevel
 import com.chonkcheck.android.domain.model.DailyGoals
@@ -79,6 +80,44 @@ fun User.toEntity(): UserEntity = UserEntity(
     tdee = goals?.tdee,
     onboardingCompleted = onboardingCompleted
 )
+
+/**
+ * Merges API profile data into an existing local UserEntity.
+ * Preserves local-only fields (id, avatarUrl, syncedAt) while updating
+ * profile, goals, and onboarding status from the server.
+ */
+fun UserEntity.mergeWithApiProfile(dto: UserProfileDto): UserEntity = copy(
+    name = dto.name ?: name,
+    weightUnit = dto.weightUnit,
+    heightUnit = dto.heightUnit ?: heightUnit,
+    height = dto.height ?: height,
+    sex = dto.sex ?: sex,
+    activityLevel = dto.activityLevel?.toLocalActivityLevel() ?: activityLevel,
+    weightGoal = dto.weightGoal ?: weightGoal,
+    weeklyGoal = dto.weightGoalRate ?: weeklyGoal,
+    dailyCalorieTarget = dto.goals.calories,
+    proteinTarget = dto.goals.protein,
+    carbsTarget = dto.goals.carbs,
+    fatTarget = dto.goals.fat,
+    tdee = dto.tdee ?: tdee,
+    onboardingCompleted = dto.onboardingCompleted ?: onboardingCompleted,
+    syncedAt = System.currentTimeMillis(),
+    updatedAt = System.currentTimeMillis()
+)
+
+/**
+ * Converts API activity level values to local entity format.
+ * API uses: sedentary, light, moderate, active, very_active
+ * Local uses: sedentary, lightly_active, moderately_active, very_active, extra_active
+ */
+private fun String.toLocalActivityLevel(): String = when (this.lowercase()) {
+    "sedentary" -> "sedentary"
+    "light" -> "lightly_active"
+    "moderate" -> "moderately_active"
+    "active" -> "very_active"
+    "very_active" -> "extra_active"
+    else -> this.lowercase()
+}
 
 private fun String.toWeightUnit(): WeightUnit = when (this.lowercase()) {
     "lb" -> WeightUnit.LB
