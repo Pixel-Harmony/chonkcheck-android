@@ -26,10 +26,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +44,7 @@ import com.chonkcheck.android.domain.model.WeightUnit
 import com.chonkcheck.android.domain.usecase.TdeeResult
 import com.chonkcheck.android.presentation.ui.components.ChonkButton
 import com.chonkcheck.android.presentation.ui.components.ChonkOutlinedButton
+import com.chonkcheck.android.presentation.ui.components.WeeklyTargetRateOptions
 import com.chonkcheck.android.ui.theme.CarbsColor
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.ChonkGreen
@@ -71,14 +70,6 @@ fun GoalsStepScreen(
     isLoading: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val weeklyGoalRange = remember(weightGoal) {
-        when (weightGoal) {
-            WeightGoal.LOSE -> -1.0f..-0.25f
-            WeightGoal.GAIN -> 0.1f..0.5f
-            else -> 0f..0f
-        }
-    }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -125,57 +116,14 @@ fun GoalsStepScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            val weeklyGoalDisplay = weeklyGoalKg?.let { kg ->
-                when (weightUnit) {
-                    WeightUnit.KG -> String.format("%.2f kg", kotlin.math.abs(kg))
-                    WeightUnit.LB -> String.format("%.1f lb", kotlin.math.abs(kg) * 2.20462)
-                    WeightUnit.ST -> {
-                        val totalLb = kotlin.math.abs(kg) * 2.20462
-                        String.format("%.1f lb", totalLb)
-                    }
-                }
-            } ?: ""
-
-            Text(
-                text = if (weightGoal == WeightGoal.LOSE) {
-                    "Lose $weeklyGoalDisplay per week"
-                } else {
-                    "Gain $weeklyGoalDisplay per week"
-                },
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+            WeeklyTargetRateOptions(
+                weightUnit = weightUnit,
+                weightGoal = weightGoal,
+                weeklyGoalKg = weeklyGoalKg,
+                tdee = tdeePreview?.tdee,
+                onWeeklyGoalChange = onWeeklyGoalChange,
                 modifier = Modifier.fillMaxWidth()
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Slider(
-                value = (weeklyGoalKg?.toFloat() ?: weeklyGoalRange.start),
-                onValueChange = { onWeeklyGoalChange(it.toDouble()) },
-                valueRange = weeklyGoalRange,
-                steps = when (weightGoal) {
-                    WeightGoal.LOSE -> 2
-                    WeightGoal.GAIN -> 3
-                    else -> 0
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = if (weightGoal == WeightGoal.LOSE) "Gradual" else "Slow",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = if (weightGoal == WeightGoal.LOSE) "Aggressive" else "Fast",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
 
         if (tdeePreview != null && caloriePreview != null) {

@@ -15,6 +15,7 @@ import com.chonkcheck.android.domain.model.WeightUnit
 import com.chonkcheck.android.domain.repository.AuthRepository
 import com.chonkcheck.android.domain.repository.SettingsRepository
 import com.chonkcheck.android.domain.usecase.CalculateTdeeUseCase
+import com.chonkcheck.android.domain.usecase.GetWeightEntriesUseCase
 import com.chonkcheck.android.domain.usecase.TdeeResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -99,7 +100,8 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val settingsRepository: SettingsRepository,
-    private val calculateTdeeUseCase: CalculateTdeeUseCase
+    private val calculateTdeeUseCase: CalculateTdeeUseCase,
+    private val getWeightEntriesUseCase: GetWeightEntriesUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -114,13 +116,15 @@ class SettingsViewModel @Inject constructor(
             authRepository.currentUser,
             settingsRepository.themePreference,
             settingsRepository.weightUnit,
-            settingsRepository.heightUnit
-        ) { user, theme, weightUnit, heightUnit ->
-            SettingsPreferences(user, theme, weightUnit, heightUnit)
+            settingsRepository.heightUnit,
+            getWeightEntriesUseCase()
+        ) { user, theme, weightUnit, heightUnit, weightEntries ->
+            val latestWeight = weightEntries.maxByOrNull { it.date }?.weight
+            SettingsPreferences(user, theme, weightUnit, heightUnit, latestWeight)
         }
             .onEach { prefs ->
                 if (prefs.user != null) {
-                    initializeFormFromUser(prefs.user, prefs.theme, prefs.weightUnit, prefs.heightUnit)
+                    initializeFormFromUser(prefs.user, prefs.theme, prefs.weightUnit, prefs.heightUnit, prefs.currentWeight)
                 } else {
                     _uiState.update { it.copy(isLoading = false) }
                 }
@@ -137,14 +141,16 @@ class SettingsViewModel @Inject constructor(
         val user: User?,
         val theme: ThemePreference,
         val weightUnit: WeightUnit?,
-        val heightUnit: HeightUnit?
+        val heightUnit: HeightUnit?,
+        val currentWeight: Double?
     )
 
     private fun initializeFormFromUser(
         user: User,
         theme: ThemePreference,
         savedWeightUnit: WeightUnit?,
-        savedHeightUnit: HeightUnit?
+        savedHeightUnit: HeightUnit?,
+        currentWeight: Double?
     ) {
         val profile = user.profile
         val goals = user.goals
@@ -168,6 +174,7 @@ class SettingsViewModel @Inject constructor(
                 editBirthDate = birthDate,
                 editSex = profile?.sex,
                 editActivityLevel = profile?.activityLevel,
+                editCurrentWeightKg = currentWeight,
                 editWeightGoal = goals?.weightGoal,
                 editTargetWeightKg = goals?.targetWeight,
                 editWeeklyGoalKg = goals?.weeklyGoal,
@@ -255,7 +262,7 @@ class SettingsViewModel @Inject constructor(
 
     // Goals updates
     fun updateWeightGoal(goal: WeightGoal?) {
-        _uiState.update { it.copy(editWeightGoal = goal) }
+        _uiState.update { it.copy(editWeightGoal = goal, editWeeklyGoalKg = null) }
         updateCaloriePreview()
     }
 

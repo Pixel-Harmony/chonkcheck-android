@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chonkcheck.android.domain.model.DiaryDay
 import com.chonkcheck.android.domain.model.DiaryEntry
+import com.chonkcheck.android.domain.model.Exercise
 import com.chonkcheck.android.domain.model.MacroProgress
 import com.chonkcheck.android.domain.model.MealType
 import com.chonkcheck.android.domain.usecase.CompleteDayUseCase
 import com.chonkcheck.android.domain.usecase.DeleteDiaryEntryUseCase
+import com.chonkcheck.android.domain.usecase.DeleteExerciseUseCase
 import com.chonkcheck.android.domain.usecase.GetDiaryDayUseCase
 import com.chonkcheck.android.domain.usecase.GetUserGoalsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,12 +34,15 @@ data class DiaryUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val error: String? = null,
-    val deleteConfirmation: DiaryEntry? = null
+    val deleteConfirmation: DiaryEntry? = null,
+    val deleteExerciseConfirmation: Exercise? = null
 )
 
 sealed class DiaryEvent {
     data class NavigateToAddFood(val date: LocalDate, val mealType: MealType) : DiaryEvent()
     data class NavigateToEditEntry(val entryId: String) : DiaryEvent()
+    data class NavigateToAddExercise(val date: LocalDate) : DiaryEvent()
+    data class NavigateToEditExercise(val exerciseId: String) : DiaryEvent()
     data object ShowDeleteSuccess : DiaryEvent()
     data class ShowError(val message: String) : DiaryEvent()
 }
@@ -46,6 +51,7 @@ sealed class DiaryEvent {
 class DiaryViewModel @Inject constructor(
     private val getDiaryDayUseCase: GetDiaryDayUseCase,
     private val deleteDiaryEntryUseCase: DeleteDiaryEntryUseCase,
+    private val deleteExerciseUseCase: DeleteExerciseUseCase,
     private val completeDayUseCase: CompleteDayUseCase,
     private val getUserGoalsUseCase: GetUserGoalsUseCase
 ) : ViewModel() {
@@ -143,6 +149,37 @@ class DiaryViewModel @Inject constructor(
 
     fun onDeleteCancel() {
         _uiState.update { it.copy(deleteConfirmation = null) }
+    }
+
+    fun onAddExercise() {
+        _events.value = DiaryEvent.NavigateToAddExercise(_selectedDate.value)
+    }
+
+    fun onExerciseClick(exercise: Exercise) {
+        _events.value = DiaryEvent.NavigateToEditExercise(exercise.id)
+    }
+
+    fun onDeleteExerciseClick(exercise: Exercise) {
+        _uiState.update { it.copy(deleteExerciseConfirmation = exercise) }
+    }
+
+    fun onDeleteExerciseConfirm() {
+        val exercise = _uiState.value.deleteExerciseConfirmation ?: return
+        _uiState.update { it.copy(deleteExerciseConfirmation = null) }
+
+        viewModelScope.launch {
+            deleteExerciseUseCase(exercise.id)
+                .onSuccess {
+                    _events.value = DiaryEvent.ShowDeleteSuccess
+                }
+                .onFailure { error ->
+                    _events.value = DiaryEvent.ShowError(error.message ?: "Failed to delete exercise")
+                }
+        }
+    }
+
+    fun onDeleteExerciseCancel() {
+        _uiState.update { it.copy(deleteExerciseConfirmation = null) }
     }
 
     fun onCompleteDay() {

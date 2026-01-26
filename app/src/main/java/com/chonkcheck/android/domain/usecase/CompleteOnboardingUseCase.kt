@@ -2,10 +2,12 @@ package com.chonkcheck.android.domain.usecase
 
 import com.chonkcheck.android.data.db.dao.UserDao
 import com.chonkcheck.android.domain.model.ActivityLevel
+import com.chonkcheck.android.domain.model.CreateWeightParams
 import com.chonkcheck.android.domain.model.HeightUnit
 import com.chonkcheck.android.domain.model.Sex
 import com.chonkcheck.android.domain.model.WeightGoal
 import com.chonkcheck.android.domain.model.WeightUnit
+import com.chonkcheck.android.domain.repository.WeightRepository
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -24,7 +26,8 @@ data class OnboardingData(
 
 class CompleteOnboardingUseCase @Inject constructor(
     private val userDao: UserDao,
-    private val calculateTdeeUseCase: CalculateTdeeUseCase
+    private val calculateTdeeUseCase: CalculateTdeeUseCase,
+    private val weightRepository: WeightRepository
 ) {
 
     suspend operator fun invoke(userId: String, data: OnboardingData): Result<Unit> {
@@ -66,6 +69,15 @@ class CompleteOnboardingUseCase @Inject constructor(
                 fat = macros.fat,
                 bmr = tdeeResult.bmr,
                 tdee = tdeeResult.tdee
+            )
+
+            // Create initial weight entry from onboarding weight
+            weightRepository.createEntry(
+                CreateWeightParams(
+                    weight = data.currentWeightKg,
+                    date = LocalDate.now(),
+                    notes = null
+                )
             )
 
             Result.success(Unit)

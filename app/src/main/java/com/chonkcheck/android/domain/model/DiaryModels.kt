@@ -38,13 +38,21 @@ data class DiaryDay(
     val date: LocalDate,
     val entriesByMeal: Map<MealType, List<DiaryEntry>>,
     val totals: MacroTotals,
-    val isCompleted: Boolean
+    val isCompleted: Boolean,
+    val exercises: List<Exercise> = emptyList(),
+    val exerciseCalories: Double = 0.0
 ) {
     val allEntries: List<DiaryEntry>
         get() = entriesByMeal.values.flatten()
 
     val hasEntries: Boolean
         get() = allEntries.isNotEmpty()
+
+    val netCalories: Double
+        get() = totals.calories - exerciseCalories
+
+    val hasExercises: Boolean
+        get() = exercises.isNotEmpty()
 }
 
 data class MacroTotals(

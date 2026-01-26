@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chonkcheck.android.domain.model.DailyGoals
 import com.chonkcheck.android.domain.model.DiaryDay
 import com.chonkcheck.android.domain.model.DiaryEntry
+import com.chonkcheck.android.domain.model.Exercise
 import com.chonkcheck.android.domain.model.MacroProgress
 import com.chonkcheck.android.domain.model.MacroTotals
 import com.chonkcheck.android.domain.model.MealType
@@ -39,7 +40,9 @@ import com.chonkcheck.android.presentation.ui.components.LoadingIndicator
 import com.chonkcheck.android.presentation.ui.diary.components.CompleteDayButton
 import com.chonkcheck.android.presentation.ui.diary.components.DailyMacroSummary
 import com.chonkcheck.android.presentation.ui.diary.components.DateNavigator
+import com.chonkcheck.android.presentation.ui.diary.components.ExerciseSection
 import com.chonkcheck.android.presentation.ui.diary.components.MealSection
+import com.chonkcheck.android.presentation.ui.diary.components.NetCaloriesSummary
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import java.time.LocalDate
 
@@ -47,6 +50,8 @@ import java.time.LocalDate
 fun DiaryScreen(
     onNavigateToAddFood: (date: LocalDate, mealType: MealType) -> Unit,
     onNavigateToEditEntry: (entryId: String) -> Unit,
+    onNavigateToAddExercise: (date: LocalDate) -> Unit,
+    onNavigateToEditExercise: (exerciseId: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DiaryViewModel = hiltViewModel()
 ) {
@@ -62,6 +67,14 @@ fun DiaryScreen(
             }
             is DiaryEvent.NavigateToEditEntry -> {
                 onNavigateToEditEntry(currentEvent.entryId)
+                viewModel.onEventConsumed()
+            }
+            is DiaryEvent.NavigateToAddExercise -> {
+                onNavigateToAddExercise(currentEvent.date)
+                viewModel.onEventConsumed()
+            }
+            is DiaryEvent.NavigateToEditExercise -> {
+                onNavigateToEditExercise(currentEvent.exerciseId)
                 viewModel.onEventConsumed()
             }
             is DiaryEvent.ShowDeleteSuccess -> {
@@ -85,6 +98,10 @@ fun DiaryScreen(
         onDeleteClick = viewModel::onDeleteClick,
         onDeleteConfirm = viewModel::onDeleteConfirm,
         onDeleteCancel = viewModel::onDeleteCancel,
+        onAddExercise = viewModel::onAddExercise,
+        onExerciseClick = viewModel::onExerciseClick,
+        onDeleteExerciseConfirm = viewModel::onDeleteExerciseConfirm,
+        onDeleteExerciseCancel = viewModel::onDeleteExerciseCancel,
         onCompleteDay = viewModel::onCompleteDay,
         onReopenDay = viewModel::onReopenDay,
         onRefresh = viewModel::refresh,
@@ -104,6 +121,10 @@ fun DiaryScreenContent(
     onDeleteClick: (DiaryEntry) -> Unit,
     onDeleteConfirm: () -> Unit,
     onDeleteCancel: () -> Unit,
+    onAddExercise: () -> Unit,
+    onExerciseClick: (Exercise) -> Unit,
+    onDeleteExerciseConfirm: () -> Unit,
+    onDeleteExerciseCancel: () -> Unit,
     onCompleteDay: () -> Unit,
     onReopenDay: () -> Unit,
     onRefresh: () -> Unit = {},
@@ -191,6 +212,22 @@ fun DiaryScreenContent(
                     )
                 }
 
+                // Exercise section
+                ExerciseSection(
+                    exercises = uiState.diaryDay?.exercises ?: emptyList(),
+                    onAddExercise = onAddExercise,
+                    onExerciseClick = onExerciseClick,
+                    isCompleted = uiState.diaryDay?.isCompleted == true
+                )
+
+                // Net calories summary (only show when there are exercises)
+                if (uiState.diaryDay?.hasExercises == true) {
+                    NetCaloriesSummary(
+                        foodCalories = uiState.diaryDay.totals.calories,
+                        exerciseCalories = uiState.diaryDay.exerciseCalories
+                    )
+                }
+
                 // Bottom padding for navigation bar
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -229,6 +266,43 @@ fun DiaryScreenContent(
             },
             dismissButton = {
                 TextButton(onClick = onDeleteCancel) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Delete exercise confirmation dialog
+    if (uiState.deleteExerciseConfirmation != null) {
+        AlertDialog(
+            onDismissRequest = onDeleteExerciseCancel,
+            title = {
+                Text(
+                    text = "Delete exercise?",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+            },
+            text = {
+                Text(
+                    text = "\"${uiState.deleteExerciseConfirmation.name}\" will be removed from your diary.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = onDeleteExerciseConfirm,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDeleteExerciseCancel) {
                     Text("Cancel")
                 }
             }
@@ -306,6 +380,10 @@ private fun DiaryScreenPreview() {
             onDeleteClick = {},
             onDeleteConfirm = {},
             onDeleteCancel = {},
+            onAddExercise = {},
+            onExerciseClick = {},
+            onDeleteExerciseConfirm = {},
+            onDeleteExerciseCancel = {},
             onCompleteDay = {},
             onReopenDay = {}
         )
@@ -326,6 +404,10 @@ private fun DiaryScreenLoadingPreview() {
             onDeleteClick = {},
             onDeleteConfirm = {},
             onDeleteCancel = {},
+            onAddExercise = {},
+            onExerciseClick = {},
+            onDeleteExerciseConfirm = {},
+            onDeleteExerciseCancel = {},
             onCompleteDay = {},
             onReopenDay = {}
         )

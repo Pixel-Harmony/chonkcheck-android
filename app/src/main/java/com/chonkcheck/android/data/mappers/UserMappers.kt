@@ -82,6 +82,7 @@ fun User.toEntity(): UserEntity = UserEntity(
 
 private fun String.toWeightUnit(): WeightUnit = when (this.lowercase()) {
     "lb" -> WeightUnit.LB
+    "st" -> WeightUnit.ST
     else -> WeightUnit.KG
 }
 

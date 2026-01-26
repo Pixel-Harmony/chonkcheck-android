@@ -36,6 +36,7 @@ import com.chonkcheck.android.presentation.ui.meals.SavedMealFormScreen
 import com.chonkcheck.android.presentation.ui.meals.SavedMealPreviewScreen
 import com.chonkcheck.android.presentation.ui.recipes.RecipeFormScreen
 import com.chonkcheck.android.presentation.ui.recipes.RecipesScreen
+import com.chonkcheck.android.presentation.ui.exercise.ExerciseFormScreen
 import com.chonkcheck.android.presentation.ui.scanner.BarcodeScannerScreen
 import com.chonkcheck.android.presentation.ui.scanner.NutritionLabelScannerScreen
 import com.chonkcheck.android.presentation.ui.settings.SettingsScreen
@@ -157,6 +158,16 @@ fun ChonkCheckNavHost(
                     onNavigateToEditEntry = { entryId ->
                         navController.navigate(
                             Screen.DiaryEditEntry.createRoute(entryId)
+                        )
+                    },
+                    onNavigateToAddExercise = { date ->
+                        navController.navigate(
+                            Screen.AddExercise.createRoute(date.toString())
+                        )
+                    },
+                    onNavigateToEditExercise = { exerciseId ->
+                        navController.navigate(
+                            Screen.EditExercise.createRoute(exerciseId)
                         )
                     }
                 )
@@ -356,6 +367,29 @@ fun ChonkCheckNavHost(
 
             composable(Screen.Weight.route) {
                 WeightScreen()
+            }
+
+            // Exercise screens
+            composable(
+                route = Screen.AddExercise.route,
+                arguments = listOf(
+                    navArgument(NavArgs.DATE) { type = NavType.StringType }
+                )
+            ) {
+                ExerciseFormScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Screen.EditExercise.route,
+                arguments = listOf(
+                    navArgument(NavArgs.EXERCISE_ID) { type = NavType.StringType }
+                )
+            ) {
+                ExerciseFormScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
 
             composable(Screen.Settings.route) {

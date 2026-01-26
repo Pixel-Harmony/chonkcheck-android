@@ -27,13 +27,13 @@ interface ExerciseDao {
     fun getEntriesForDate(userId: String, date: String): Flow<List<ExerciseEntryEntity>>
 
     @Query("""
-        SELECT COALESCE(SUM(caloriesBurned), 0)
+        SELECT COALESCE(SUM(caloriesBurned), 0.0)
         FROM exercise_entries
         WHERE userId = :userId
         AND date = :date
         AND deletedAt IS NULL
     """)
-    fun getTotalCaloriesBurnedForDate(userId: String, date: String): Flow<Int>
+    fun getTotalCaloriesBurnedForDate(userId: String, date: String): Flow<Double>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entry: ExerciseEntryEntity)

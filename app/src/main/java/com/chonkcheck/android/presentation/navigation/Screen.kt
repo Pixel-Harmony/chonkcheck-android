@@ -59,6 +59,14 @@ sealed class Screen(val route: String) {
     data object Profile : Screen("profile")
     data object Goals : Screen("settings/goals")
     data object Privacy : Screen("settings/privacy")
+
+    // Exercise screens
+    data object AddExercise : Screen("exercise/add/{date}") {
+        fun createRoute(date: String) = "exercise/add/$date"
+    }
+    data object EditExercise : Screen("exercise/edit/{exerciseId}") {
+        fun createRoute(exerciseId: String) = "exercise/edit/$exerciseId"
+    }
 }
 
 object NavArgs {
@@ -68,4 +76,5 @@ object NavArgs {
     const val DATE = "date"
     const val MEAL_TYPE = "mealType"
     const val ENTRY_ID = "entryId"
+    const val EXERCISE_ID = "exerciseId"
 }

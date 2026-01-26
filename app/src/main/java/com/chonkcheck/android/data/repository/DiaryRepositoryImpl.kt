@@ -2,6 +2,7 @@ package com.chonkcheck.android.data.repository
 
 import com.chonkcheck.android.data.api.DiaryApi
 import com.chonkcheck.android.data.db.dao.DiaryDao
+import com.chonkcheck.android.data.db.dao.ExerciseDao
 import com.chonkcheck.android.data.db.dao.FoodDao
 import com.chonkcheck.android.data.db.entity.DayCompletionEntity
 import com.chonkcheck.android.data.mappers.toDomain
@@ -27,11 +28,13 @@ import java.time.LocalDate
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.chonkcheck.android.data.mappers.toEntity as exerciseDtoToEntity
 
 @Singleton
 class DiaryRepositoryImpl @Inject constructor(
     private val diaryApi: DiaryApi,
     private val diaryDao: DiaryDao,
+    private val exerciseDao: ExerciseDao,
     private val foodDao: FoodDao,
     private val authRepository: AuthRepository
 ) : DiaryRepository {
@@ -43,19 +46,24 @@ class DiaryRepositoryImpl @Inject constructor(
             if (userId != null) {
                 combine(
                     diaryDao.getEntriesForDate(userId, date.toString()),
-                    diaryDao.getDayCompletion(userId, date.toString())
-                ) { entries, completion ->
+                    diaryDao.getDayCompletion(userId, date.toString()),
+                    exerciseDao.getEntriesForDate(userId, date.toString())
+                ) { entries, completion, exerciseEntries ->
                     val domainEntries = entries.map { it.toDomain() }
                     val entriesByMeal = MealType.entries.associateWith { mealType ->
                         domainEntries.filter { entry -> entry.mealType == mealType }
                     }
                     val totals = calculateTotals(domainEntries)
+                    val exercises = exerciseEntries.map { it.toDomain() }
+                    val exerciseCalories = exercises.sumOf { it.caloriesBurned }
 
                     DiaryDay(
                         date = date,
                         entriesByMeal = entriesByMeal,
                         totals = totals,
-                        isCompleted = completion != null
+                        isCompleted = completion != null,
+                        exercises = exercises,
+                        exerciseCalories = exerciseCalories
                     )
                 }
             } else {
@@ -250,6 +258,12 @@ class DiaryRepositoryImpl @Inject constructor(
             // Clear existing entries for date and insert fresh ones
             diaryDao.deleteAllForDate(currentUser.id, date.toString())
             diaryDao.insertAll(entities)
+
+            // Sync exercises from the response
+            response.exercises?.let { exerciseDtos ->
+                val exerciseEntities = exerciseDtos.map { it.exerciseDtoToEntity(currentUser.id) }
+                exerciseDao.insertAll(exerciseEntities)
+            }
 
             // Update completion status
             if (response.isCompleted) {

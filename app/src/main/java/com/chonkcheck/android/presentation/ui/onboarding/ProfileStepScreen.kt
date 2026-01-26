@@ -16,6 +16,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DatePicker
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -123,15 +126,25 @@ fun ProfileStepScreen(
                     } ?: (null to null)
                 }
 
+                var feetFieldValue by remember(feet) {
+                    val text = feet?.toString() ?: ""
+                    mutableStateOf(TextFieldValue(text, TextRange(text.length)))
+                }
+                var inchesFieldValue by remember(inches) {
+                    val text = inches?.toString() ?: ""
+                    mutableStateOf(TextFieldValue(text, TextRange(text.length)))
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     OutlinedTextField(
-                        value = feet?.toString() ?: "",
+                        value = feetFieldValue,
                         onValueChange = { value ->
-                            val ft = value.toIntOrNull() ?: 0
-                            val inn = inches ?: 0
+                            feetFieldValue = value
+                            val ft = value.text.toIntOrNull() ?: 0
+                            val inn = inchesFieldValue.text.toIntOrNull() ?: 0
                             val totalInches = ft * 12 + inn
                             onHeightChange(totalInches * 2.54)
                         },
@@ -139,13 +152,22 @@ fun ProfileStepScreen(
                         suffix = { Text("ft") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .onFocusChanged { focusState ->
+                                if (focusState.isFocused) {
+                                    feetFieldValue = feetFieldValue.copy(
+                                        selection = TextRange(0, feetFieldValue.text.length)
+                                    )
+                                }
+                            }
                     )
                     OutlinedTextField(
-                        value = inches?.toString() ?: "",
+                        value = inchesFieldValue,
                         onValueChange = { value ->
-                            val inn = value.toIntOrNull() ?: 0
-                            val ft = feet ?: 0
+                            inchesFieldValue = value
+                            val inn = value.text.toIntOrNull() ?: 0
+                            val ft = feetFieldValue.text.toIntOrNull() ?: 0
                             val totalInches = ft * 12 + inn
                             onHeightChange(totalInches * 2.54)
                         },
@@ -153,7 +175,15 @@ fun ProfileStepScreen(
                         suffix = { Text("in") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .onFocusChanged { focusState ->
+                                if (focusState.isFocused) {
+                                    inchesFieldValue = inchesFieldValue.copy(
+                                        selection = TextRange(0, inchesFieldValue.text.length)
+                                    )
+                                }
+                            }
                     )
                 }
             }
@@ -200,15 +230,25 @@ fun ProfileStepScreen(
                     } ?: (null to null)
                 }
 
+                var stonesFieldValue by remember(stones) {
+                    val text = stones?.toString() ?: ""
+                    mutableStateOf(TextFieldValue(text, TextRange(text.length)))
+                }
+                var poundsFieldValue by remember(pounds) {
+                    val text = pounds?.toString() ?: ""
+                    mutableStateOf(TextFieldValue(text, TextRange(text.length)))
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     OutlinedTextField(
-                        value = stones?.toString() ?: "",
+                        value = stonesFieldValue,
                         onValueChange = { value ->
-                            val st = value.toIntOrNull() ?: 0
-                            val lb = pounds ?: 0
+                            stonesFieldValue = value
+                            val st = value.text.toIntOrNull() ?: 0
+                            val lb = poundsFieldValue.text.toIntOrNull() ?: 0
                             val totalLb = st * 14 + lb
                             onWeightChange(totalLb / 2.20462)
                         },
@@ -216,13 +256,22 @@ fun ProfileStepScreen(
                         suffix = { Text("st") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .onFocusChanged { focusState ->
+                                if (focusState.isFocused) {
+                                    stonesFieldValue = stonesFieldValue.copy(
+                                        selection = TextRange(0, stonesFieldValue.text.length)
+                                    )
+                                }
+                            }
                     )
                     OutlinedTextField(
-                        value = pounds?.toString() ?: "",
+                        value = poundsFieldValue,
                         onValueChange = { value ->
-                            val lb = value.toIntOrNull() ?: 0
-                            val st = stones ?: 0
+                            poundsFieldValue = value
+                            val lb = value.text.toIntOrNull() ?: 0
+                            val st = stonesFieldValue.text.toIntOrNull() ?: 0
                             val totalLb = st * 14 + lb
                             onWeightChange(totalLb / 2.20462)
                         },
@@ -230,7 +279,15 @@ fun ProfileStepScreen(
                         suffix = { Text("lb") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .onFocusChanged { focusState ->
+                                if (focusState.isFocused) {
+                                    poundsFieldValue = poundsFieldValue.copy(
+                                        selection = TextRange(0, poundsFieldValue.text.length)
+                                    )
+                                }
+                            }
                     )
                 }
             }

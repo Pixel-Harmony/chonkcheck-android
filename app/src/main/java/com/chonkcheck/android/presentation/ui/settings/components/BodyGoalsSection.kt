@@ -28,7 +28,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -41,8 +40,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,6 +58,7 @@ import com.chonkcheck.android.domain.model.WeightGoal
 import com.chonkcheck.android.domain.model.WeightUnit
 import com.chonkcheck.android.domain.usecase.TdeeResult
 import com.chonkcheck.android.presentation.ui.components.ChonkButton
+import com.chonkcheck.android.presentation.ui.components.WeeklyTargetRateOptions
 import com.chonkcheck.android.ui.theme.CarbsColor
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.ChonkGreen
@@ -105,15 +108,6 @@ fun BodyGoalsSection(
     var showDatePicker by remember { mutableStateOf(false) }
     val dateFormatter = remember { DateTimeFormatter.ofPattern("MMM d, yyyy") }
 
-    // Rate options matching the web app
-    val rateOptionsKg = listOf(0.25, 0.5, 0.75, 1.0)
-    val rateOptionsLb = listOf(0.5, 1.0, 1.5, 2.0)
-
-    val rateOptions = when (weightUnit) {
-        WeightUnit.KG -> rateOptionsKg
-        WeightUnit.LB, WeightUnit.ST -> rateOptionsLb
-    }
-
     Column(modifier = modifier.fillMaxWidth()) {
         // Body Measurements Section
         Text(
@@ -149,15 +143,25 @@ fun BodyGoalsSection(
                     } ?: (null to null)
                 }
 
+                var feetFieldValue by remember(feet) {
+                    val text = feet?.toString() ?: ""
+                    mutableStateOf(TextFieldValue(text, TextRange(text.length)))
+                }
+                var inchesFieldValue by remember(inches) {
+                    val text = inches?.toString() ?: ""
+                    mutableStateOf(TextFieldValue(text, TextRange(text.length)))
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     OutlinedTextField(
-                        value = feet?.toString() ?: "",
+                        value = feetFieldValue,
                         onValueChange = { value ->
-                            val ft = value.toIntOrNull() ?: 0
-                            val inn = inches ?: 0
+                            feetFieldValue = value
+                            val ft = value.text.toIntOrNull() ?: 0
+                            val inn = inchesFieldValue.text.toIntOrNull() ?: 0
                             val totalInches = ft * 12 + inn
                             onHeightChange(totalInches * 2.54)
                         },
@@ -165,13 +169,22 @@ fun BodyGoalsSection(
                         suffix = { Text("ft") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .onFocusChanged { focusState ->
+                                if (focusState.isFocused) {
+                                    feetFieldValue = feetFieldValue.copy(
+                                        selection = TextRange(0, feetFieldValue.text.length)
+                                    )
+                                }
+                            }
                     )
                     OutlinedTextField(
-                        value = inches?.toString() ?: "",
+                        value = inchesFieldValue,
                         onValueChange = { value ->
-                            val inn = value.toIntOrNull() ?: 0
-                            val ft = feet ?: 0
+                            inchesFieldValue = value
+                            val inn = value.text.toIntOrNull() ?: 0
+                            val ft = feetFieldValue.text.toIntOrNull() ?: 0
                             val totalInches = ft * 12 + inn
                             onHeightChange(totalInches * 2.54)
                         },
@@ -179,7 +192,15 @@ fun BodyGoalsSection(
                         suffix = { Text("in") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .onFocusChanged { focusState ->
+                                if (focusState.isFocused) {
+                                    inchesFieldValue = inchesFieldValue.copy(
+                                        selection = TextRange(0, inchesFieldValue.text.length)
+                                    )
+                                }
+                            }
                     )
                 }
             }
@@ -310,15 +331,25 @@ fun BodyGoalsSection(
                     } ?: (null to null)
                 }
 
+                var stonesFieldValue by remember(stones) {
+                    val text = stones?.toString() ?: ""
+                    mutableStateOf(TextFieldValue(text, TextRange(text.length)))
+                }
+                var poundsFieldValue by remember(pounds) {
+                    val text = pounds?.toString() ?: ""
+                    mutableStateOf(TextFieldValue(text, TextRange(text.length)))
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     OutlinedTextField(
-                        value = stones?.toString() ?: "",
+                        value = stonesFieldValue,
                         onValueChange = { value ->
-                            val st = value.toIntOrNull() ?: 0
-                            val lb = pounds ?: 0
+                            stonesFieldValue = value
+                            val st = value.text.toIntOrNull() ?: 0
+                            val lb = poundsFieldValue.text.toIntOrNull() ?: 0
                             val totalLb = st * 14 + lb
                             onCurrentWeightChange(totalLb / 2.20462)
                         },
@@ -326,13 +357,22 @@ fun BodyGoalsSection(
                         suffix = { Text("st") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .onFocusChanged { focusState ->
+                                if (focusState.isFocused) {
+                                    stonesFieldValue = stonesFieldValue.copy(
+                                        selection = TextRange(0, stonesFieldValue.text.length)
+                                    )
+                                }
+                            }
                     )
                     OutlinedTextField(
-                        value = pounds?.toString() ?: "",
+                        value = poundsFieldValue,
                         onValueChange = { value ->
-                            val lb = value.toIntOrNull() ?: 0
-                            val st = stones ?: 0
+                            poundsFieldValue = value
+                            val lb = value.text.toIntOrNull() ?: 0
+                            val st = stonesFieldValue.text.toIntOrNull() ?: 0
                             val totalLb = st * 14 + lb
                             onCurrentWeightChange(totalLb / 2.20462)
                         },
@@ -340,7 +380,15 @@ fun BodyGoalsSection(
                         suffix = { Text("lb") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .onFocusChanged { focusState ->
+                                if (focusState.isFocused) {
+                                    poundsFieldValue = poundsFieldValue.copy(
+                                        selection = TextRange(0, poundsFieldValue.text.length)
+                                    )
+                                }
+                            }
                     )
                 }
             }
@@ -388,40 +436,13 @@ fun BodyGoalsSection(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            val unitLabel = if (weightUnit == WeightUnit.ST) "lb" else weightUnit.symbol
-
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                rateOptions.forEach { rate ->
-                    // Convert rate to kg for calorie calculation
-                    val rateInKg = if (weightUnit == WeightUnit.KG) rate else rate / 2.20462
-
-                    // Calculate target calories (7700 cal per kg)
-                    val calorieChange = (rateInKg * 7700 / 7).toInt()
-                    val targetCalories = if (weightGoal == WeightGoal.LOSE) {
-                        (tdeePreview?.tdee ?: 2000) - calorieChange
-                    } else {
-                        (tdeePreview?.tdee ?: 2000) + calorieChange
-                    }
-
-                    val isTooLow = targetCalories < 1200
-                    val isSelected = weeklyGoalKg?.let {
-                        kotlin.math.abs(it - rateInKg) < 0.01
-                    } ?: false
-
-                    RateOptionButton(
-                        rate = rate,
-                        unitLabel = unitLabel,
-                        targetCalories = targetCalories,
-                        isSelected = isSelected,
-                        isTooLow = isTooLow,
-                        onClick = {
-                            if (!isTooLow) {
-                                onWeeklyGoalChange(rateInKg)
-                            }
-                        }
-                    )
-                }
-            }
+            WeeklyTargetRateOptions(
+                weightUnit = weightUnit,
+                weightGoal = weightGoal,
+                weeklyGoalKg = weeklyGoalKg,
+                tdee = tdeePreview?.tdee,
+                onWeeklyGoalChange = onWeeklyGoalChange
+            )
         }
 
         // Diet Preset Section
@@ -687,96 +708,6 @@ private fun GoalOptionCard(
                         MaterialTheme.colorScheme.onSurfaceVariant
                     }
                 )
-            }
-        }
-    }
-}
-
-@Composable
-private fun RateOptionButton(
-    rate: Double,
-    unitLabel: String,
-    targetCalories: Int,
-    isSelected: Boolean,
-    isTooLow: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val rateDisplay = if (rate == rate.toInt().toDouble()) {
-        "${rate.toInt()}"
-    } else {
-        String.format("%.1f", rate).trimEnd('0').trimEnd('.')
-    }
-
-    Card(
-        onClick = onClick,
-        enabled = !isTooLow,
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surface
-            },
-            disabledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
-        ),
-        border = if (isSelected) {
-            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-        } else {
-            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-        }
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = if (isSelected) "●" else "○",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (isSelected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
-                Text(
-                    text = "$rateDisplay $unitLabel/week",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (isTooLow) {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    } else if (isSelected) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    }
-                )
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = "${targetCalories.toString().chunked(3).joinToString(",")} cal/day",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (isTooLow) {
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
-                if (isTooLow) {
-                    Text(
-                        text = "⚠️",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
             }
         }
     }

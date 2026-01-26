@@ -105,7 +105,7 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun updateWeightGoal(goal: WeightGoal) {
-        _uiState.update { it.copy(weightGoal = goal) }
+        _uiState.update { it.copy(weightGoal = goal, weeklyGoalKg = null) }
         updateCaloriePreview()
     }
 
@@ -148,14 +148,20 @@ class OnboardingViewModel @Inject constructor(
         val tdee = state.tdeePreview?.tdee ?: return
         val weightGoal = state.weightGoal ?: return
 
-        val weeklyGoal = state.weeklyGoalKg ?: when (weightGoal) {
-            WeightGoal.LOSE -> -0.5
+        // Weekly goal is always positive (rate), direction determined by weightGoal
+        val weeklyGoalRate = state.weeklyGoalKg ?: when (weightGoal) {
+            WeightGoal.LOSE -> 0.5
             WeightGoal.MAINTAIN -> 0.0
             WeightGoal.GAIN -> 0.25
         }
 
-        val dailyDeficit = (weeklyGoal * 7700 / 7).toInt()
-        val calories = (tdee + dailyDeficit).coerceAtLeast(1200)
+        // 7700 calories per kg of body weight
+        val dailyCalorieChange = (weeklyGoalRate * 7700 / 7).toInt()
+        val calories = when (weightGoal) {
+            WeightGoal.LOSE -> (tdee - dailyCalorieChange).coerceAtLeast(1200)
+            WeightGoal.GAIN -> tdee + dailyCalorieChange
+            WeightGoal.MAINTAIN -> tdee
+        }
 
         _uiState.update { it.copy(caloriePreview = calories) }
         updateMacroTargets()

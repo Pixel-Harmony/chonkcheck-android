@@ -19,9 +19,7 @@ data class ExerciseEntryEntity(
     val date: String, // ISO date (YYYY-MM-DD)
     val name: String,
     val description: String?,
-    val durationMinutes: Int?,
-    val caloriesBurned: Int,
-    val notes: String?,
+    val caloriesBurned: Double,
 
     // Sync
     val syncedAt: Long? = null,
