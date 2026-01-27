@@ -776,6 +776,7 @@ private fun getUnitDisplayName(unit: ServingUnit): String {
         ServingUnit.TEASPOON -> "teaspoon"
         ServingUnit.PIECE -> "piece"
         ServingUnit.SLICE -> "slice"
+        ServingUnit.SERVING -> "serving"
     }
 }
 

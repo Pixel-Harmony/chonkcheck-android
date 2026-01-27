@@ -46,6 +46,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun ExerciseFormScreen(
     onNavigateBack: () -> Unit,
+    onExerciseSaved: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ExerciseFormViewModel = hiltViewModel()
 ) {
@@ -63,7 +64,7 @@ fun ExerciseFormScreen(
                 viewModel.onEventConsumed()
             }
             is ExerciseFormEvent.ExerciseSaved -> {
-                onNavigateBack()
+                onExerciseSaved()
                 viewModel.onEventConsumed()
             }
             is ExerciseFormEvent.ShowError -> {

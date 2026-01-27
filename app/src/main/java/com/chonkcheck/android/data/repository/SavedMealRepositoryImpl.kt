@@ -1,6 +1,7 @@
 package com.chonkcheck.android.data.repository
 
 import com.chonkcheck.android.data.api.SavedMealApi
+import com.chonkcheck.android.data.db.dao.DiaryDao
 import com.chonkcheck.android.data.db.dao.FoodDao
 import com.chonkcheck.android.data.db.dao.RecipeDao
 import com.chonkcheck.android.data.db.dao.SavedMealDao
@@ -39,6 +40,7 @@ import javax.inject.Singleton
 class SavedMealRepositoryImpl @Inject constructor(
     private val savedMealApi: SavedMealApi,
     private val savedMealDao: SavedMealDao,
+    private val diaryDao: DiaryDao,
     private val foodDao: FoodDao,
     private val recipeDao: RecipeDao,
     private val authRepository: AuthRepository,
@@ -205,6 +207,10 @@ class SavedMealRepositoryImpl @Inject constructor(
 
             // Call API to add meal to diary
             val response = savedMealApi.addMealToDiary(params.toRequest())
+
+            // Insert entries into local database so the diary UI updates immediately
+            val entities = response.entries.map { it.toEntity(currentUser.id) }
+            diaryDao.insertAll(entities)
 
             // Map response entries to domain
             val entries = response.entries.map { dto ->

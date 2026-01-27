@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +35,7 @@ import com.chonkcheck.android.domain.model.ServingUnit
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.ChonkGreen
 import com.chonkcheck.android.ui.theme.Coral
+import com.chonkcheck.android.ui.theme.MealPurple
 import java.time.LocalDate
 import kotlin.math.roundToInt
 
@@ -43,106 +46,110 @@ fun DiaryEntryCard(
     onDeleteClick: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
-    val typeColor = when (entry.itemType) {
-        DiaryItemType.FOOD -> Coral
-        DiaryItemType.RECIPE -> ChonkGreen
+    // Color based on item type: foods = orange, recipes = green, meals = purple
+    val typeColor = when {
+        entry.mealGroupId != null -> MealPurple
+        entry.itemType == DiaryItemType.RECIPE -> ChonkGreen
+        else -> Coral
     }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(start = 16.dp, end = if (onDeleteClick != null) 4.dp else 16.dp, top = 12.dp, bottom = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        // Left content
-        Column(
-            modifier = Modifier.weight(1f)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Name with type indicator
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            // Left content
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                // Name with type indicator (rounded square)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = entry.name,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Rounded square type indicator
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(typeColor)
+                    )
+                }
+
+                // Brand if present
+                if (!entry.brand.isNullOrBlank()) {
+                    Text(
+                        text = entry.brand,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                // Quantity info
+                Text(
+                    text = formatQuantity(entry),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Calories on the right
+            Column(
+                horizontalAlignment = Alignment.End
             ) {
                 Text(
-                    text = entry.name,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Medium
+                    text = entry.calories.roundToInt().toString(),
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.SemiBold
                     ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Type indicator
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(typeColor)
-                )
-            }
-
-            // Brand if present
-            if (!entry.brand.isNullOrBlank()) {
                 Text(
-                    text = entry.brand,
+                    text = "cal",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // Quantity info
-            Text(
-                text = formatQuantity(entry),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            // Macros row
-            Text(
-                text = "P: ${entry.protein.formatMacro()}g · C: ${entry.carbs.formatMacro()}g · F: ${entry.fat.formatMacro()}g",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        // Calories on the right
-        Column(
-            horizontalAlignment = Alignment.End
-        ) {
-            Text(
-                text = entry.calories.roundToInt().toString(),
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.SemiBold
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "cal",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        // Delete button (only show if onDeleteClick is provided)
-        if (onDeleteClick != null) {
-            Spacer(modifier = Modifier.width(8.dp))
-            IconButton(
-                onClick = onDeleteClick,
-                modifier = Modifier.size(44.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Delete,
-                    contentDescription = "Delete entry",
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(22.dp)
-                )
+            // Delete button (only show if onDeleteClick is provided)
+            if (onDeleteClick != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = onDeleteClick,
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = "Delete entry",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
             }
         }
     }

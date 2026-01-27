@@ -301,7 +301,12 @@ fun ChonkCheckNavHost(
                     onNavigateToBarcodeScanner = {
                         navController.navigate(Screen.BarcodeScanner.route)
                     },
-                    onFoodAdded = { navController.popBackStack() },
+                    onFoodAdded = {
+                        navController.navigate(Screen.Diary.route) {
+                            popUpTo(Screen.Diary.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
                     onNavigateToMealPreview = { savedMealId, date, mealType ->
                         navController.navigate(Screen.SavedMealPreview.createRoute(savedMealId, date, mealType))
                     }
@@ -374,7 +379,12 @@ fun ChonkCheckNavHost(
             ) {
                 SavedMealPreviewScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onMealAdded = { navController.popBackStack() }
+                    onMealAdded = {
+                        navController.navigate(Screen.Diary.route) {
+                            popUpTo(Screen.Diary.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
 
@@ -390,7 +400,13 @@ fun ChonkCheckNavHost(
                 )
             ) {
                 ExerciseFormScreen(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onExerciseSaved = {
+                        navController.navigate(Screen.Diary.route) {
+                            popUpTo(Screen.Diary.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
 
@@ -401,7 +417,13 @@ fun ChonkCheckNavHost(
                 )
             ) {
                 ExerciseFormScreen(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onExerciseSaved = {
+                        navController.navigate(Screen.Diary.route) {
+                            popUpTo(Screen.Diary.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
 

@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,7 +45,7 @@ import com.chonkcheck.android.domain.model.ServingUnit
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.ChonkGreen
 import com.chonkcheck.android.ui.theme.Coral
-import com.chonkcheck.android.ui.theme.Purple
+import com.chonkcheck.android.ui.theme.MealPurple
 import java.time.LocalDate
 import kotlin.math.roundToInt
 
@@ -61,75 +63,79 @@ fun MealGroupCard(
     val totalCarbs = entries.sumOf { it.carbs }
     val totalFat = entries.sumOf { it.fat }
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { isExpanded = !isExpanded }
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        // Header row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Left content
-            Column(
-                modifier = Modifier.weight(1f)
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isExpanded = !isExpanded }
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Name row with indicator
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+                // Left content
+                Column(
+                    modifier = Modifier.weight(1f)
                 ) {
-                    // Group name
+                    // Name row with count and indicator
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Group name
+                        Text(
+                            text = groupName,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+
+                        Spacer(modifier = Modifier.width(4.dp))
+
+                        // Item count in parentheses
+                        Text(
+                            text = "(${entries.size})",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Purple rounded square indicator for meal groups
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(MealPurple)
+                        )
+                    }
+
+                    // Macros row
                     Text(
-                        text = groupName,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Medium
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // Purple indicator for meal groups
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(Purple)
+                        text = "P: ${totalProtein.formatMacro()}g · C: ${totalCarbs.formatMacro()}g · F: ${totalFat.formatMacro()}g",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
-                // Item count
-                Text(
-                    text = "${entries.size} items",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                // Macros row
-                Text(
-                    text = "P: ${totalProtein.formatMacro()}g · C: ${totalCarbs.formatMacro()}g · F: ${totalFat.formatMacro()}g",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            // Right content
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+                // Right content
                 // Total calories
                 Column(
                     horizontalAlignment = Alignment.End
                 ) {
                     Text(
                         text = totalCalories.toString(),
-                        style = MaterialTheme.typography.bodyLarge.copy(
+                        style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
                         color = MaterialTheme.colorScheme.onSurface
@@ -151,30 +157,31 @@ fun MealGroupCard(
                         Icon(
                             imageVector = Icons.Outlined.Delete,
                             contentDescription = "Delete meal group",
-                            tint = MaterialTheme.colorScheme.error,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(22.dp)
                         )
                     }
                 }
             }
-        }
 
-        // Expanded content
-        AnimatedVisibility(
-            visible = isExpanded,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut()
-        ) {
-            Column(
-                modifier = Modifier.padding(top = 8.dp)
+            // Expanded content showing individual items
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
             ) {
-                entries.forEachIndexed { index, entry ->
-                    MealGroupEntryRow(entry = entry)
-                    if (index < entries.lastIndex) {
-                        HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
+                Column {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    entries.forEachIndexed { index, entry ->
+                        MealGroupEntryRow(entry = entry)
+                        if (index < entries.lastIndex) {
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -195,7 +202,7 @@ private fun MealGroupEntryRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -220,7 +227,7 @@ private fun MealGroupEntryRow(
                 // Entry name
                 Text(
                     text = entry.name,
-                    style = MaterialTheme.typography.bodySmall.copy(
+                    style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium
                     ),
                     color = MaterialTheme.colorScheme.onSurface,
@@ -232,15 +239,7 @@ private fun MealGroupEntryRow(
             // Serving info
             Text(
                 text = formatQuantity(entry),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 16.dp)
-            )
-
-            // Macros
-            Text(
-                text = "P: ${entry.protein.formatMacro()}g · C: ${entry.carbs.formatMacro()}g · F: ${entry.fat.formatMacro()}g",
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 16.dp)
             )
@@ -252,7 +251,7 @@ private fun MealGroupEntryRow(
         ) {
             Text(
                 text = "${entry.calories.roundToInt()}",
-                style = MaterialTheme.typography.bodySmall.copy(
+                style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.SemiBold
                 ),
                 color = MaterialTheme.colorScheme.onSurface

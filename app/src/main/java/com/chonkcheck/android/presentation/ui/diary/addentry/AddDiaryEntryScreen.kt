@@ -54,6 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chonkcheck.android.domain.model.Food
 import com.chonkcheck.android.domain.model.FoodType
 import com.chonkcheck.android.domain.model.MealType
+import com.chonkcheck.android.domain.model.Recipe
 import com.chonkcheck.android.domain.model.SavedMeal
 import com.chonkcheck.android.domain.model.ServingUnit
 import com.chonkcheck.android.presentation.ui.components.LoadingIndicator
@@ -61,6 +62,10 @@ import com.chonkcheck.android.presentation.ui.foods.components.FoodSearchBar
 import com.chonkcheck.android.presentation.ui.meals.components.SavedMealCard
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.ChonkGreen
+import com.chonkcheck.android.ui.theme.Coral
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
 import java.time.LocalDate
 import kotlin.math.roundToInt
 
@@ -136,6 +141,7 @@ fun AddDiaryEntryScreen(
                 uiState = uiState,
                 onSearchQueryChange = viewModel::onSearchQueryChange,
                 onFoodSelected = viewModel::onFoodSelected,
+                onRecipeSelected = viewModel::onRecipeSelected,
                 onMealSelected = viewModel::onMealSelected,
                 modifier = Modifier.padding(innerPadding)
             )
@@ -166,6 +172,7 @@ private fun SearchPhaseContent(
     uiState: AddDiaryEntryUiState,
     onSearchQueryChange: (String) -> Unit,
     onFoodSelected: (Food) -> Unit,
+    onRecipeSelected: (Recipe) -> Unit,
     onMealSelected: (SavedMeal) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -180,7 +187,7 @@ private fun SearchPhaseContent(
         FoodSearchBar(
             query = uiState.searchQuery,
             onQueryChange = onSearchQueryChange,
-            placeholder = "Search foods, meals..."
+            placeholder = "Search foods, recipes, meals..."
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -202,13 +209,19 @@ private fun SearchPhaseContent(
                 uiState.searchResults
             }
 
+            val displayRecipes = if (uiState.searchQuery.isBlank()) {
+                uiState.recentRecipes
+            } else {
+                uiState.recipeResults
+            }
+
             val displayMeals = if (uiState.searchQuery.isBlank()) {
                 uiState.recentMeals
             } else {
                 uiState.savedMealResults
             }
 
-            val hasNoResults = displayFoods.isEmpty() && displayMeals.isEmpty() && uiState.searchQuery.isNotBlank()
+            val hasNoResults = displayFoods.isEmpty() && displayRecipes.isEmpty() && displayMeals.isEmpty() && uiState.searchQuery.isNotBlank()
 
             if (hasNoResults) {
                 Box(
@@ -218,7 +231,7 @@ private fun SearchPhaseContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No foods or meals found",
+                        text = "No foods, recipes, or meals found",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -248,6 +261,43 @@ private fun SearchPhaseContent(
                                 onClick = { onMealSelected(meal) },
                                 onDelete = null
                             )
+                        }
+                    }
+
+                    // Recipes section
+                    if (displayRecipes.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = if (uiState.searchQuery.isBlank()) "Recent Recipes" else "Recipes",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
+
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column {
+                                    displayRecipes.forEachIndexed { index, recipe ->
+                                        RecipeSearchResultItem(
+                                            recipe = recipe,
+                                            onClick = { onRecipeSelected(recipe) }
+                                        )
+                                        if (index < displayRecipes.lastIndex) {
+                                            HorizontalDivider(
+                                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -308,14 +358,25 @@ private fun FoodSearchResultItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = food.name,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = food.name,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                // Orange indicator for foods
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(Coral)
+                )
+            }
             if (!food.brand.isNullOrBlank()) {
                 Text(
                     text = food.brand,
@@ -348,6 +409,63 @@ private fun FoodSearchResultItem(
     }
 }
 
+@Composable
+private fun RecipeSearchResultItem(
+    recipe: Recipe,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = recipe.name,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                // Green indicator for recipes
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(ChonkGreen)
+                )
+            }
+            Text(
+                text = "${recipe.totalServings} ${recipe.servingUnit.displayName}${if (recipe.totalServings > 1) "s" else ""}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = "${recipe.caloriesPerServing.roundToInt()}",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold
+                )
+            )
+            Text(
+                text = "cal/serving",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DetailsPhaseContent(
@@ -359,7 +477,19 @@ private fun DetailsPhaseContent(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
-    val food = uiState.selectedFood ?: return
+    val food = uiState.selectedFood
+    val recipe = uiState.selectedRecipe
+
+    if (food == null && recipe == null) return
+
+    val itemName = food?.name ?: recipe?.name ?: ""
+    val itemBrand = food?.brand
+    val perServingText = if (food != null) {
+        "Per ${food.servingSize.formatServing()} ${food.servingUnit.displayName}: ${food.calories.roundToInt()} cal"
+    } else if (recipe != null) {
+        "Per serving: ${recipe.caloriesPerServing.roundToInt()} cal"
+    } else ""
+    val servingUnitLabel = if (food != null) uiState.servingUnit.displayName else "servings"
 
     Column(
         modifier = modifier
@@ -367,7 +497,7 @@ private fun DetailsPhaseContent(
             .verticalScroll(scrollState)
             .padding(24.dp)
     ) {
-        // Food info card
+        // Food/Recipe info card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
@@ -378,20 +508,20 @@ private fun DetailsPhaseContent(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = food.name,
+                    text = itemName,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold
                     )
                 )
-                if (!food.brand.isNullOrBlank()) {
+                if (!itemBrand.isNullOrBlank()) {
                     Text(
-                        text = food.brand,
+                        text = itemBrand,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Text(
-                    text = "Per ${food.servingSize.formatServing()} ${food.servingUnit.displayName}: ${food.calories.roundToInt()} cal",
+                    text = perServingText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -446,19 +576,19 @@ private fun DetailsPhaseContent(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             OutlinedTextField(
-                value = uiState.servingSize.formatServing(),
+                value = uiState.servingSizeText,
                 onValueChange = onServingSizeChange,
-                label = { Text("Serving size") },
-                suffix = { Text(uiState.servingUnit.displayName) },
+                label = { Text(if (recipe != null) "Servings" else "Serving size") },
+                suffix = { Text(servingUnitLabel) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
                 modifier = Modifier.weight(1f)
             )
 
             OutlinedTextField(
-                value = uiState.numberOfServings.formatServing(),
+                value = uiState.numberOfServingsText,
                 onValueChange = onNumberOfServingsChange,
-                label = { Text("Servings") },
+                label = { Text("Quantity") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
                 modifier = Modifier.weight(1f)
@@ -597,6 +727,7 @@ private fun SearchPhasePreview() {
             ),
             onSearchQueryChange = {},
             onFoodSelected = {},
+            onRecipeSelected = {},
             onMealSelected = {}
         )
     }
@@ -643,8 +774,10 @@ private fun DetailsPhasePreview() {
                     createdAt = System.currentTimeMillis()
                 ),
                 servingSize = 100.0,
+                servingSizeText = "100",
                 servingUnit = ServingUnit.GRAM,
                 numberOfServings = 1.5,
+                numberOfServingsText = "1.5",
                 calculatedCalories = 247.5,
                 calculatedProtein = 46.5,
                 calculatedCarbs = 0.0,

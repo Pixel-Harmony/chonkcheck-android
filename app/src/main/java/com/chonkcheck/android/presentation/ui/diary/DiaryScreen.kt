@@ -102,6 +102,7 @@ fun DiaryScreen(
         onDeleteCancel = viewModel::onDeleteCancel,
         onAddExercise = viewModel::onAddExercise,
         onExerciseClick = viewModel::onExerciseClick,
+        onDeleteExerciseClick = viewModel::onDeleteExerciseClick,
         onDeleteExerciseConfirm = viewModel::onDeleteExerciseConfirm,
         onDeleteExerciseCancel = viewModel::onDeleteExerciseCancel,
         onCompleteDay = viewModel::onCompleteDay,
@@ -125,6 +126,7 @@ fun DiaryScreenContent(
     onDeleteCancel: () -> Unit,
     onAddExercise: () -> Unit,
     onExerciseClick: (Exercise) -> Unit,
+    onDeleteExerciseClick: (Exercise) -> Unit,
     onDeleteExerciseConfirm: () -> Unit,
     onDeleteExerciseCancel: () -> Unit,
     onCompleteDay: () -> Unit,
@@ -209,6 +211,7 @@ fun DiaryScreenContent(
                     exercises = uiState.diaryDay?.exercises ?: emptyList(),
                     onAddExercise = onAddExercise,
                     onExerciseClick = onExerciseClick,
+                    onDeleteClick = if (uiState.diaryDay?.isCompleted == true) null else onDeleteExerciseClick,
                     isCompleted = uiState.diaryDay?.isCompleted == true
                 )
 
@@ -374,6 +377,7 @@ private fun DiaryScreenPreview() {
             onDeleteCancel = {},
             onAddExercise = {},
             onExerciseClick = {},
+            onDeleteExerciseClick = {},
             onDeleteExerciseConfirm = {},
             onDeleteExerciseCancel = {},
             onCompleteDay = {},
@@ -398,6 +402,7 @@ private fun DiaryScreenLoadingPreview() {
             onDeleteCancel = {},
             onAddExercise = {},
             onExerciseClick = {},
+            onDeleteExerciseClick = {},
             onDeleteExerciseConfirm = {},
             onDeleteExerciseCancel = {},
             onCompleteDay = {},

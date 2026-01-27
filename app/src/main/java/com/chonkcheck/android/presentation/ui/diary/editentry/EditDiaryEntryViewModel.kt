@@ -28,8 +28,10 @@ data class EditDiaryEntryUiState(
 
     // Editable fields
     val servingSize: Double = 0.0,
+    val servingSizeText: String = "",
     val servingUnit: ServingUnit = ServingUnit.GRAM,
     val numberOfServings: Double = 1.0,
+    val numberOfServingsText: String = "1",
     val mealType: MealType = MealType.BREAKFAST,
 
     // Original values for ratio calculation
@@ -88,8 +90,10 @@ class EditDiaryEntryViewModel @Inject constructor(
                             isLoading = false,
                             entry = entry,
                             servingSize = entry.servingSize,
+                            servingSizeText = entry.servingSize.formatForInput(),
                             servingUnit = entry.servingUnit,
                             numberOfServings = entry.numberOfServings,
+                            numberOfServingsText = entry.numberOfServings.formatForInput(),
                             mealType = entry.mealType,
                             originalServingSize = entry.servingSize,
                             originalNumberOfServings = entry.numberOfServings,
@@ -114,15 +118,23 @@ class EditDiaryEntryViewModel @Inject constructor(
     }
 
     fun onServingSizeChange(size: String) {
-        val sizeValue = size.toDoubleOrNull() ?: return
-        _uiState.update { it.copy(servingSize = sizeValue) }
+        val sizeValue = size.toDoubleOrNull() ?: 0.0
+        _uiState.update { it.copy(servingSizeText = size, servingSize = sizeValue) }
         recalculateNutrition()
     }
 
     fun onNumberOfServingsChange(servings: String) {
-        val servingsValue = servings.toDoubleOrNull() ?: return
-        _uiState.update { it.copy(numberOfServings = servingsValue) }
+        val servingsValue = servings.toDoubleOrNull() ?: 0.0
+        _uiState.update { it.copy(numberOfServingsText = servings, numberOfServings = servingsValue) }
         recalculateNutrition()
+    }
+
+    private fun Double.formatForInput(): String {
+        return if (this == this.toLong().toDouble()) {
+            this.toLong().toString()
+        } else {
+            String.format("%.1f", this)
+        }
     }
 
     fun onMealTypeChange(mealType: MealType) {

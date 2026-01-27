@@ -48,7 +48,7 @@ fun String.toServingUnit(): ServingUnit {
         "tsp", "teaspoon" -> ServingUnit.TEASPOON
         "piece" -> ServingUnit.PIECE
         "slice" -> ServingUnit.SLICE
-        "serving" -> ServingUnit.GRAM // Default serving to GRAM
+        "serving" -> ServingUnit.SERVING
         else -> ServingUnit.GRAM
     }
 }
@@ -67,6 +67,7 @@ fun ServingUnit.toApiValue(): String = when (this) {
     ServingUnit.TEASPOON -> "tsp"
     ServingUnit.PIECE -> "piece"
     ServingUnit.SLICE -> "slice"
+    ServingUnit.SERVING -> "serving"
 }
 
 /**

@@ -16,6 +16,7 @@ val Teal = Color(0xFF14B8A6) // Teal 500
 val TealLight = Color(0xFF2DD4BF) // Teal 400
 val Purple = Color(0xFFA855F7) // Purple 500
 val PurpleLight = Color(0xFFC084FC) // Purple 400
+val MealPurple = Purple // Purple for saved meals indicator
 
 // Light theme colors
 val md_theme_light_primary = ChonkGreen

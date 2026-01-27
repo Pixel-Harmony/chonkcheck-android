@@ -4,8 +4,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,55 +35,81 @@ import kotlin.math.roundToInt
 fun ExerciseEntryCard(
     exercise: Exercise,
     onClick: () -> Unit,
+    onDeleteClick: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(
-            modifier = Modifier.weight(1f)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = exercise.name,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            if (!exercise.description.isNullOrBlank()) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
-                    text = exercise.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
+                    text = exercise.name,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-            }
-        }
 
-        Column(
-            horizontalAlignment = Alignment.End
-        ) {
-            Text(
-                text = "-${exercise.caloriesBurned.roundToInt()}",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.SemiBold
-                ),
-                color = Coral
-            )
-            Text(
-                text = "cal",
-                style = MaterialTheme.typography.bodySmall,
-                color = Coral.copy(alpha = 0.8f)
-            )
+                if (!exercise.description.isNullOrBlank()) {
+                    Text(
+                        text = exercise.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "-${exercise.caloriesBurned.roundToInt()}",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = Coral
+                )
+                Text(
+                    text = "cal",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Coral.copy(alpha = 0.8f)
+                )
+            }
+
+            // Delete button (only show if onDeleteClick is provided)
+            if (onDeleteClick != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = onDeleteClick,
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = "Delete exercise",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -93,14 +129,15 @@ private fun ExerciseEntryCardPreview() {
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis()
             ),
-            onClick = {}
+            onClick = {},
+            onDeleteClick = {}
         )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun ExerciseEntryCardNoDescriptionPreview() {
+private fun ExerciseEntryCardNoDeletePreview() {
     ChonkCheckTheme {
         ExerciseEntryCard(
             exercise = Exercise(
@@ -113,7 +150,8 @@ private fun ExerciseEntryCardNoDescriptionPreview() {
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis()
             ),
-            onClick = {}
+            onClick = {},
+            onDeleteClick = null
         )
     }
 }

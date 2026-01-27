@@ -8,5 +8,6 @@ enum class ServingUnit(val displayName: String) {
     TABLESPOON("tbsp"),
     TEASPOON("tsp"),
     PIECE("piece"),
-    SLICE("slice")
+    SLICE("slice"),
+    SERVING("serving")
 }

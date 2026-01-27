@@ -381,7 +381,7 @@ private fun PreviewItemRow(
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(
-                text = item.servingUnitName,
+                text = if (item.quantity == 1.0) "serving" else "servings",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

@@ -290,7 +290,7 @@ private fun EditEntryContent(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             OutlinedTextField(
-                value = uiState.servingSize.formatServing(),
+                value = uiState.servingSizeText,
                 onValueChange = onServingSizeChange,
                 label = { Text("Serving size") },
                 suffix = { Text(uiState.servingUnit.displayName) },
@@ -300,7 +300,7 @@ private fun EditEntryContent(
             )
 
             OutlinedTextField(
-                value = uiState.numberOfServings.formatServing(),
+                value = uiState.numberOfServingsText,
                 onValueChange = onNumberOfServingsChange,
                 label = { Text("Servings") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -411,14 +411,6 @@ private fun NutritionItem(
     }
 }
 
-private fun Double.formatServing(): String {
-    return if (this == this.toLong().toDouble()) {
-        this.toLong().toString()
-    } else {
-        String.format("%.1f", this)
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun EditEntryContentPreview() {
@@ -446,8 +438,10 @@ private fun EditEntryContentPreview() {
                     itemType = DiaryItemType.FOOD
                 ),
                 servingSize = 100.0,
+                servingSizeText = "100",
                 servingUnit = ServingUnit.GRAM,
                 numberOfServings = 1.5,
+                numberOfServingsText = "1.5",
                 mealType = MealType.BREAKFAST,
                 calculatedCalories = 247.5,
                 calculatedProtein = 46.5,
