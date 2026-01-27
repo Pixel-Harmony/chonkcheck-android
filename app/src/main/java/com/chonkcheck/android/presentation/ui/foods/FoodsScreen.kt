@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -82,6 +83,8 @@ enum class FoodHubTab {
 fun FoodsScreen(
     onNavigateToEditFood: (String) -> Unit,
     onNavigateToCreateFood: () -> Unit,
+    onNavigateToBarcodeScanner: () -> Unit = {},
+    onNavigateToCreateFoodWithBarcode: (String) -> Unit = {},
     onNavigateToCreateRecipe: () -> Unit = {},
     onNavigateToEditRecipe: (String) -> Unit = {},
     onNavigateToCreateMeal: () -> Unit = {},
@@ -111,6 +114,10 @@ fun FoodsScreen(
             }
             is FoodsEvent.NavigateToCreateFood -> {
                 onNavigateToCreateFood()
+                foodsViewModel.onEventConsumed()
+            }
+            is FoodsEvent.NavigateToCreateFoodWithBarcode -> {
+                onNavigateToCreateFoodWithBarcode((foodsEvent as FoodsEvent.NavigateToCreateFoodWithBarcode).barcode)
                 foodsViewModel.onEventConsumed()
             }
             is FoodsEvent.FoodDeleted -> {
@@ -181,6 +188,7 @@ fun FoodsScreen(
                     onFilterTypeChange = foodsViewModel::onFilterTypeChange,
                     onFoodClick = foodsViewModel::onFoodClick,
                     onAddFoodClick = foodsViewModel::onAddFoodClick,
+                    onScanBarcodeClick = onNavigateToBarcodeScanner,
                     onDeleteClick = foodsViewModel::onDeleteClick,
                     onDeleteConfirm = foodsViewModel::onDeleteConfirm,
                     onDeleteCancel = foodsViewModel::onDeleteCancel,
@@ -273,6 +281,7 @@ private fun FoodsContent(
     onFilterTypeChange: (FoodFilterType) -> Unit,
     onFoodClick: (String) -> Unit,
     onAddFoodClick: () -> Unit,
+    onScanBarcodeClick: () -> Unit,
     onDeleteClick: (com.chonkcheck.android.domain.model.Food) -> Unit,
     onDeleteConfirm: () -> Unit,
     onDeleteCancel: () -> Unit,
@@ -339,6 +348,7 @@ private fun FoodsContent(
         FoodSearchBar(
             query = uiState.searchQuery,
             onQueryChange = onSearchQueryChange,
+            onScanBarcode = onScanBarcodeClick,
             placeholder = "Search foods..."
         )
 
@@ -437,6 +447,41 @@ private fun FoodsContent(
             onConfirm = onDeleteConfirm,
             onDismiss = onDeleteCancel
         )
+    }
+
+    // Barcode lookup loading overlay
+    if (uiState.isLookingUpBarcode) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(24.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp,
+                        color = Coral
+                    )
+                    Text(
+                        text = "Looking up barcode...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -715,6 +760,7 @@ fun FoodsScreenContent(
     onFilterTypeChange: (FoodFilterType) -> Unit,
     onFoodClick: (String) -> Unit,
     onAddFoodClick: () -> Unit,
+    onScanBarcodeClick: () -> Unit = {},
     onDeleteClick: (com.chonkcheck.android.domain.model.Food) -> Unit,
     onDeleteConfirm: () -> Unit,
     onDeleteCancel: () -> Unit,
@@ -727,6 +773,7 @@ fun FoodsScreenContent(
         onFilterTypeChange = onFilterTypeChange,
         onFoodClick = onFoodClick,
         onAddFoodClick = onAddFoodClick,
+        onScanBarcodeClick = onScanBarcodeClick,
         onDeleteClick = onDeleteClick,
         onDeleteConfirm = onDeleteConfirm,
         onDeleteCancel = onDeleteCancel,

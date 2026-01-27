@@ -56,6 +56,7 @@ import com.chonkcheck.android.domain.model.FoodType
 import com.chonkcheck.android.domain.model.NutritionLabelData
 import com.chonkcheck.android.domain.model.ServingUnit
 import com.chonkcheck.android.presentation.ui.components.LoadingIndicator
+import com.chonkcheck.android.presentation.ui.components.rememberBarcodeIcon
 import com.chonkcheck.android.ui.theme.Amber
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.Coral
@@ -865,29 +866,6 @@ private fun QuickActionCards(
     }
 }
 
-@Composable
-private fun rememberBarcodeIcon(): androidx.compose.ui.graphics.painter.Painter {
-    return androidx.compose.ui.graphics.vector.rememberVectorPainter(
-        image = androidx.compose.ui.graphics.vector.ImageVector.Builder(
-            name = "Barcode",
-            defaultWidth = 24.dp,
-            defaultHeight = 24.dp,
-            viewportWidth = 24f,
-            viewportHeight = 24f
-        ).apply {
-            addPath(
-                pathData = androidx.compose.ui.graphics.vector.PathParser().parsePathString(
-                    "M12 4v1M18 15h2M12 15h-2v4M12 11v3M12 11h0.01M12 12h4.01M16 20h4M4 12h4M20 12h0.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zM17 8h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-                ).toNodes(),
-                fill = null,
-                stroke = androidx.compose.ui.graphics.SolidColor(Color.Black),
-                strokeLineWidth = 2f,
-                strokeLineCap = androidx.compose.ui.graphics.StrokeCap.Round,
-                strokeLineJoin = androidx.compose.ui.graphics.StrokeJoin.Round
-            )
-        }.build()
-    )
-}
 
 @Composable
 private fun rememberCameraIcon(): androidx.compose.ui.graphics.painter.Painter {

@@ -11,7 +11,9 @@ import com.chonkcheck.android.domain.model.MealType
 import com.chonkcheck.android.domain.model.Recipe
 import com.chonkcheck.android.domain.model.SavedMeal
 import com.chonkcheck.android.domain.model.ServingUnit
+import com.chonkcheck.android.domain.usecase.BarcodeResult
 import com.chonkcheck.android.domain.usecase.CreateDiaryEntryUseCase
+import com.chonkcheck.android.domain.usecase.LookupBarcodeUseCase
 import com.chonkcheck.android.domain.usecase.SearchFoodsUseCase
 import com.chonkcheck.android.domain.usecase.SearchRecipesUseCase
 import com.chonkcheck.android.domain.usecase.SearchSavedMealsUseCase
@@ -69,7 +71,8 @@ data class AddDiaryEntryUiState(
 
     // Error handling
     val error: String? = null,
-    val isSaving: Boolean = false
+    val isSaving: Boolean = false,
+    val isLookingUpBarcode: Boolean = false
 )
 
 sealed class AddDiaryEntryEvent {
@@ -85,7 +88,8 @@ class AddDiaryEntryViewModel @Inject constructor(
     private val searchFoodsUseCase: SearchFoodsUseCase,
     private val searchRecipesUseCase: SearchRecipesUseCase,
     private val searchSavedMealsUseCase: SearchSavedMealsUseCase,
-    private val createDiaryEntryUseCase: CreateDiaryEntryUseCase
+    private val createDiaryEntryUseCase: CreateDiaryEntryUseCase,
+    private val lookupBarcodeUseCase: LookupBarcodeUseCase
 ) : ViewModel() {
 
     private val dateString: String = savedStateHandle.get<String>(NavArgs.DATE) ?: LocalDate.now().toString()
@@ -171,6 +175,25 @@ class AddDiaryEntryViewModel @Inject constructor(
                 }
                 .catch { /* Ignore meal search errors */ }
                 .launchIn(this)
+        }
+    }
+
+    fun onBarcodeScanned(barcode: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLookingUpBarcode = true) }
+            when (val result = lookupBarcodeUseCase(barcode)) {
+                is BarcodeResult.Found -> {
+                    _uiState.update { it.copy(isLookingUpBarcode = false) }
+                    onFoodSelected(result.food)
+                }
+                is BarcodeResult.NotFound -> {
+                    _uiState.update { it.copy(isLookingUpBarcode = false) }
+                    _events.value = AddDiaryEntryEvent.ShowError("Food not found for barcode: $barcode")
+                }
+                is BarcodeResult.Error -> {
+                    _uiState.update { it.copy(isLookingUpBarcode = false, error = result.message) }
+                }
+            }
         }
     }
 

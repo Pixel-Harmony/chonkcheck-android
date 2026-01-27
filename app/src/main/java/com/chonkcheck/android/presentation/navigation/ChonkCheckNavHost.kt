@@ -12,8 +12,10 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -32,9 +34,11 @@ import com.chonkcheck.android.presentation.ui.auth.LoginScreen
 import com.chonkcheck.android.presentation.ui.dashboard.DashboardScreen
 import com.chonkcheck.android.presentation.ui.diary.DiaryScreen
 import com.chonkcheck.android.presentation.ui.diary.addentry.AddDiaryEntryScreen
+import com.chonkcheck.android.presentation.ui.diary.addentry.AddDiaryEntryViewModel
 import com.chonkcheck.android.presentation.ui.diary.editentry.EditDiaryEntryScreen
 import com.chonkcheck.android.presentation.ui.foods.FoodFormScreen
 import com.chonkcheck.android.presentation.ui.foods.FoodsScreen
+import com.chonkcheck.android.presentation.ui.foods.FoodsViewModel
 import com.chonkcheck.android.presentation.ui.onboarding.OnboardingScreen
 import com.chonkcheck.android.presentation.ui.meals.SavedMealFormScreen
 import com.chonkcheck.android.presentation.ui.meals.SavedMealPreviewScreen
@@ -173,12 +177,31 @@ fun ChonkCheckNavHost(
                 )
             }
 
-            composable(Screen.Foods.route) {
+            composable(Screen.Foods.route) { backStackEntry ->
+                val foodsViewModel: FoodsViewModel = hiltViewModel()
+                val scannedBarcode = backStackEntry.savedStateHandle.get<String>("scanned_barcode")
+
+                LaunchedEffect(scannedBarcode) {
+                    scannedBarcode?.let { barcode ->
+                        backStackEntry.savedStateHandle.remove<String>("scanned_barcode")
+                        foodsViewModel.onBarcodeScanned(barcode)
+                    }
+                }
+
                 FoodsScreen(
                     onNavigateToEditFood = { foodId ->
                         navController.navigate(Screen.EditFood.createRoute(foodId))
                     },
                     onNavigateToCreateFood = {
+                        navController.navigate(Screen.CreateFood.route)
+                    },
+                    onNavigateToBarcodeScanner = {
+                        navController.navigate(Screen.BarcodeScanner.route)
+                    },
+                    onNavigateToCreateFoodWithBarcode = { barcode ->
+                        navController.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("scanned_barcode", barcode)
                         navController.navigate(Screen.CreateFood.route)
                     },
                     onNavigateToCreateRecipe = {
@@ -192,7 +215,8 @@ fun ChonkCheckNavHost(
                     },
                     onNavigateToEditMeal = { mealId ->
                         navController.navigate(Screen.EditSavedMeal.createRoute(mealId))
-                    }
+                    },
+                    foodsViewModel = foodsViewModel
                 )
             }
 
@@ -295,7 +319,17 @@ fun ChonkCheckNavHost(
                     navArgument(NavArgs.DATE) { type = NavType.StringType },
                     navArgument(NavArgs.MEAL_TYPE) { type = NavType.StringType }
                 )
-            ) {
+            ) { backStackEntry ->
+                val addDiaryEntryViewModel: AddDiaryEntryViewModel = hiltViewModel()
+                val scannedBarcode = backStackEntry.savedStateHandle.get<String>("scanned_barcode")
+
+                LaunchedEffect(scannedBarcode) {
+                    scannedBarcode?.let { barcode ->
+                        backStackEntry.savedStateHandle.remove<String>("scanned_barcode")
+                        addDiaryEntryViewModel.onBarcodeScanned(barcode)
+                    }
+                }
+
                 AddDiaryEntryScreen(
                     onNavigateBack = { navController.popBackStack() },
                     onNavigateToBarcodeScanner = {
@@ -309,7 +343,8 @@ fun ChonkCheckNavHost(
                     },
                     onNavigateToMealPreview = { savedMealId, date, mealType ->
                         navController.navigate(Screen.SavedMealPreview.createRoute(savedMealId, date, mealType))
-                    }
+                    },
+                    viewModel = addDiaryEntryViewModel
                 )
             }
 

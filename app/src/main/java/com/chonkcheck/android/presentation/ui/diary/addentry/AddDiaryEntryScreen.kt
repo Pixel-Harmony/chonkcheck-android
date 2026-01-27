@@ -64,6 +64,7 @@ import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.ChonkGreen
 import com.chonkcheck.android.ui.theme.Coral
 import androidx.compose.foundation.background
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.clip
 import java.time.LocalDate
@@ -140,6 +141,7 @@ fun AddDiaryEntryScreen(
             AddEntryPhase.SEARCH -> SearchPhaseContent(
                 uiState = uiState,
                 onSearchQueryChange = viewModel::onSearchQueryChange,
+                onScanBarcodeClick = onNavigateToBarcodeScanner,
                 onFoodSelected = viewModel::onFoodSelected,
                 onRecipeSelected = viewModel::onRecipeSelected,
                 onMealSelected = viewModel::onMealSelected,
@@ -164,6 +166,41 @@ fun AddDiaryEntryScreen(
                 }
             }
         }
+
+        // Barcode lookup loading overlay
+        if (uiState.isLookingUpBarcode) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(24.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                            color = Coral
+                        )
+                        Text(
+                            text = "Looking up barcode...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -171,6 +208,7 @@ fun AddDiaryEntryScreen(
 private fun SearchPhaseContent(
     uiState: AddDiaryEntryUiState,
     onSearchQueryChange: (String) -> Unit,
+    onScanBarcodeClick: () -> Unit,
     onFoodSelected: (Food) -> Unit,
     onRecipeSelected: (Recipe) -> Unit,
     onMealSelected: (SavedMeal) -> Unit,
@@ -187,6 +225,7 @@ private fun SearchPhaseContent(
         FoodSearchBar(
             query = uiState.searchQuery,
             onQueryChange = onSearchQueryChange,
+            onScanBarcode = onScanBarcodeClick,
             placeholder = "Search foods, recipes, meals..."
         )
 
@@ -726,6 +765,7 @@ private fun SearchPhasePreview() {
                 )
             ),
             onSearchQueryChange = {},
+            onScanBarcodeClick = {},
             onFoodSelected = {},
             onRecipeSelected = {},
             onMealSelected = {}

@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.chonkcheck.android.domain.model.Food
 import com.chonkcheck.android.domain.model.FoodFilter
 import com.chonkcheck.android.domain.model.FoodFilterType
+import com.chonkcheck.android.domain.usecase.BarcodeResult
 import com.chonkcheck.android.domain.usecase.DeleteUserFoodUseCase
+import com.chonkcheck.android.domain.usecase.LookupBarcodeUseCase
 import com.chonkcheck.android.domain.usecase.SearchFoodsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +26,7 @@ data class FoodsUiState(
     val filterType: FoodFilterType = FoodFilterType.ALL,
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
+    val isLookingUpBarcode: Boolean = false,
     val error: String? = null,
     val deleteConfirmation: DeleteConfirmation? = null
 )
@@ -36,6 +39,7 @@ data class DeleteConfirmation(
 sealed class FoodsEvent {
     data class NavigateToEditFood(val foodId: String) : FoodsEvent()
     data object NavigateToCreateFood : FoodsEvent()
+    data class NavigateToCreateFoodWithBarcode(val barcode: String) : FoodsEvent()
     data class ShowError(val message: String) : FoodsEvent()
     data object FoodDeleted : FoodsEvent()
 }
@@ -43,7 +47,8 @@ sealed class FoodsEvent {
 @HiltViewModel
 class FoodsViewModel @Inject constructor(
     private val searchFoodsUseCase: SearchFoodsUseCase,
-    private val deleteFoodUseCase: DeleteUserFoodUseCase
+    private val deleteFoodUseCase: DeleteUserFoodUseCase,
+    private val lookupBarcodeUseCase: LookupBarcodeUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FoodsUiState())
@@ -72,6 +77,25 @@ class FoodsViewModel @Inject constructor(
 
     fun onAddFoodClick() {
         _events.value = FoodsEvent.NavigateToCreateFood
+    }
+
+    fun onBarcodeScanned(barcode: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLookingUpBarcode = true) }
+            when (val result = lookupBarcodeUseCase(barcode)) {
+                is BarcodeResult.Found -> {
+                    _uiState.update { it.copy(isLookingUpBarcode = false) }
+                    _events.value = FoodsEvent.NavigateToEditFood(result.food.id)
+                }
+                is BarcodeResult.NotFound -> {
+                    _uiState.update { it.copy(isLookingUpBarcode = false) }
+                    _events.value = FoodsEvent.NavigateToCreateFoodWithBarcode(barcode)
+                }
+                is BarcodeResult.Error -> {
+                    _uiState.update { it.copy(isLookingUpBarcode = false, error = result.message) }
+                }
+            }
+        }
     }
 
     fun onDeleteClick(food: Food) {
