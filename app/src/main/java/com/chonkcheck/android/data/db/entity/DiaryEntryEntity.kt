@@ -30,9 +30,10 @@ data class DiaryEntryEntity(
     val recipeId: String?,
 
     // Serving info for this entry
-    val servingSize: Double,
-    val servingUnit: String,
-    val numberOfServings: Double,
+    val servingSize: Double, // Base serving size from food/recipe (e.g., 100 for "100g")
+    val servingUnit: String, // Unit (g, serving, ml, etc.)
+    val numberOfServings: Double, // How many servings (quantity from API)
+    val enteredAmount: Double? = null, // Optional: the actual amount user entered
 
     // Calculated nutrition for this entry
     val calories: Double,
@@ -43,6 +44,13 @@ data class DiaryEntryEntity(
     // Display name (cached from food/recipe)
     val name: String,
     val brand: String?,
+
+    // Item type: "food" or "recipe"
+    val itemType: String = "food",
+
+    // Meal group (for saved meals)
+    val mealGroupId: String? = null,
+    val mealGroupName: String? = null,
 
     // Sync
     val syncedAt: Long? = null,

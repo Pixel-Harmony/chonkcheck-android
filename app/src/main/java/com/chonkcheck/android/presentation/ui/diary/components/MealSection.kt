@@ -5,15 +5,12 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,21 +33,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.chonkcheck.android.domain.model.DiaryEntry
 import com.chonkcheck.android.domain.model.MealType
 import com.chonkcheck.android.domain.model.ServingUnit
-import com.chonkcheck.android.ui.theme.Amber
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.ChonkGreen
-import com.chonkcheck.android.ui.theme.Coral
-import com.chonkcheck.android.ui.theme.Purple
 import java.time.LocalDate
 import kotlin.math.roundToInt
+
+private sealed class MealDisplayItem {
+    data class Group(val id: String, val name: String, val entries: List<DiaryEntry>) : MealDisplayItem()
+    data class Single(val entry: DiaryEntry) : MealDisplayItem()
+}
 
 @Composable
 fun MealSection(
@@ -59,12 +55,12 @@ fun MealSection(
     entries: List<DiaryEntry>,
     onAddFood: () -> Unit,
     onEntryClick: (DiaryEntry) -> Unit,
+    onDeleteClick: ((DiaryEntry) -> Unit)?,
     isCompleted: Boolean,
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(true) }
 
-    val mealColor = getMealColor(mealType)
     val totalCalories = entries.sumOf { it.calories }.roundToInt()
 
     Card(
@@ -81,23 +77,13 @@ fun MealSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { isExpanded = !isExpanded }
-                    .padding(16.dp),
+                    .padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Color indicator
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(mealColor)
-                    )
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
                     // Meal name
                     Text(
                         text = mealType.displayName,
@@ -131,7 +117,21 @@ fun MealSection(
                             ),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
+
+                    // Add button in header (only show if not completed)
+                    if (!isCompleted) {
+                        IconButton(
+                            onClick = onAddFood,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add to ${mealType.displayName}",
+                                tint = ChonkGreen
+                            )
+                        }
                     }
 
                     // Expand/collapse icon
@@ -163,47 +163,51 @@ fun MealSection(
                             modifier = Modifier.padding(16.dp)
                         )
                     } else {
-                        // Entry list
-                        entries.forEachIndexed { index, entry ->
-                            DiaryEntryCard(
-                                entry = entry,
-                                onClick = { onEntryClick(entry) }
-                            )
-                            if (index < entries.lastIndex) {
+                        // Group entries by mealGroupId
+                        val (groupedEntries, individualEntries) = entries.partition { it.mealGroupId != null }
+                        val mealGroups = groupedEntries.groupBy { it.mealGroupId }
+
+                        // Build list of items to display (meal groups + individual entries)
+                        val displayItems = mutableListOf<MealDisplayItem>()
+
+                        // Add meal groups
+                        mealGroups.forEach { (groupId, groupEntries) ->
+                            val groupName = groupEntries.firstOrNull()?.mealGroupName ?: "Saved Meal"
+                            displayItems.add(MealDisplayItem.Group(groupId!!, groupName, groupEntries))
+                        }
+
+                        // Add individual entries
+                        individualEntries.forEach { entry ->
+                            displayItems.add(MealDisplayItem.Single(entry))
+                        }
+
+                        // Render items
+                        displayItems.forEachIndexed { index, item ->
+                            when (item) {
+                                is MealDisplayItem.Group -> {
+                                    MealGroupCard(
+                                        groupName = item.name,
+                                        entries = item.entries,
+                                        onDeleteClick = onDeleteClick?.let {
+                                            // Delete all entries in the group
+                                            { item.entries.forEach { entry -> it(entry) } }
+                                        }
+                                    )
+                                }
+                                is MealDisplayItem.Single -> {
+                                    DiaryEntryCard(
+                                        entry = item.entry,
+                                        onClick = { onEntryClick(item.entry) },
+                                        onDeleteClick = onDeleteClick?.let { { it(item.entry) } }
+                                    )
+                                }
+                            }
+                            if (index < displayItems.lastIndex) {
                                 HorizontalDivider(
                                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
                                     modifier = Modifier.padding(horizontal = 16.dp)
                                 )
                             }
-                        }
-                    }
-
-                    // Add button (only show if not completed)
-                    if (!isCompleted) {
-                        HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                        )
-
-                        TextButton(
-                            onClick = onAddFood,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = null,
-                                tint = mealColor,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Add",
-                                color = mealColor,
-                                style = MaterialTheme.typography.labelLarge.copy(
-                                    fontWeight = FontWeight.Medium
-                                )
-                            )
                         }
                     }
                 }
@@ -212,14 +216,6 @@ fun MealSection(
     }
 }
 
-private fun getMealColor(mealType: MealType): Color {
-    return when (mealType) {
-        MealType.BREAKFAST -> Coral
-        MealType.LUNCH -> Amber
-        MealType.DINNER -> ChonkGreen
-        MealType.SNACKS -> Purple
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
@@ -267,6 +263,7 @@ private fun MealSectionWithEntriesPreview() {
             ),
             onAddFood = {},
             onEntryClick = {},
+            onDeleteClick = {},
             isCompleted = false,
             modifier = Modifier.padding(16.dp)
         )
@@ -282,6 +279,7 @@ private fun MealSectionEmptyPreview() {
             entries = emptyList(),
             onAddFood = {},
             onEntryClick = {},
+            onDeleteClick = {},
             isCompleted = false,
             modifier = Modifier.padding(16.dp)
         )
@@ -316,6 +314,7 @@ private fun MealSectionCompletedPreview() {
             ),
             onAddFood = {},
             onEntryClick = {},
+            onDeleteClick = null,
             isCompleted = true,
             modifier = Modifier.padding(16.dp)
         )

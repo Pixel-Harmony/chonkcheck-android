@@ -147,17 +147,6 @@ fun DiaryScreenContent(
         ) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Header
-        Text(
-            text = "Diary",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.SemiBold
-            ),
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Date navigator
         DateNavigator(
             selectedDate = uiState.selectedDate,
@@ -210,6 +199,7 @@ fun DiaryScreenContent(
                         entries = entries,
                         onAddFood = { onAddFood(mealType) },
                         onEntryClick = onEntryClick,
+                        onDeleteClick = if (uiState.diaryDay?.isCompleted == true) null else onDeleteClick,
                         isCompleted = uiState.diaryDay?.isCompleted == true
                     )
                 }

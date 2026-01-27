@@ -34,7 +34,7 @@ import com.chonkcheck.android.data.db.entity.WeightEntryEntity
         ExerciseEntryEntity::class,
         SyncQueueEntity::class
     ],
-    version = 4,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

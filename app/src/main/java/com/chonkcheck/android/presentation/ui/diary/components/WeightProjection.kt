@@ -11,11 +11,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,7 +23,6 @@ import com.chonkcheck.android.domain.model.WeightUnit
 import com.chonkcheck.android.presentation.ui.weight.components.WeightUnitConverter
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.ChonkGreen
-import com.chonkcheck.android.ui.theme.Coral
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
@@ -57,39 +56,26 @@ fun WeightProjection(
         else -> "${data.dailyDeficit.absoluteValue.roundToInt()} cal surplus"
     }
 
-    val projectionColor = when {
-        data.isMaintenance -> MaterialTheme.colorScheme.onSurface
-        data.isDeficit -> ChonkGreen
-        else -> Coral
-    }
-
     val projectedWeight = WeightUnitConverter.formatWeight(data.projectedWeightKg, data.weightUnit)
-    val currentWeight = WeightUnitConverter.formatWeight(data.currentWeightKg, data.weightUnit)
-    val weightChange = WeightUnitConverter.formatWeight(data.projectedWeightChangeKg.absoluteValue, data.weightUnit)
-
-    val changeDirection = when {
-        data.isMaintenance -> "stay at"
-        data.isDeficit -> "lose"
-        else -> "gain"
-    }
 
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = ChonkGreen
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header
             Text(
                 text = "If every day was like today...",
-                style = MaterialTheme.typography.titleSmall,
+                style = androidx.compose.material3.MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.White.copy(alpha = 0.9f)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -97,21 +83,13 @@ fun WeightProjection(
             // Main projection
             Text(
                 text = "In 5 weeks you would weigh $projectedWeight",
-                style = MaterialTheme.typography.titleMedium,
+                style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = projectionColor
+                color = Color.White
             )
 
-            if (!data.isMaintenance) {
-                Text(
-                    text = "You would $changeDirection $weightChange",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
             Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+            HorizontalDivider(color = Color.White.copy(alpha = 0.3f))
             Spacer(modifier = Modifier.height(12.dp))
 
             // Stats row
@@ -129,8 +107,7 @@ fun WeightProjection(
                 )
                 StatItem(
                     label = "Daily",
-                    value = deficitText,
-                    valueColor = projectionColor
+                    value = deficitText
                 )
             }
         }
@@ -141,7 +118,6 @@ fun WeightProjection(
 private fun StatItem(
     label: String,
     value: String,
-    valueColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -150,14 +126,14 @@ private fun StatItem(
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
+            color = Color.White.copy(alpha = 0.8f)
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
+            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
-            color = valueColor
+            color = Color.White
         )
     }
 }

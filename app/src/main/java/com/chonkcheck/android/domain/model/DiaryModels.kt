@@ -9,17 +9,41 @@ data class DiaryEntry(
     val mealType: MealType,
     val foodId: String?,
     val recipeId: String?,
-    val servingSize: Double,
+    val servingSize: Double, // Base serving size from food/recipe
     val servingUnit: ServingUnit,
-    val numberOfServings: Double,
+    val numberOfServings: Double, // How many servings
+    val enteredAmount: Double? = null, // The actual amount entered (optional)
     val calories: Double,
     val protein: Double,
     val carbs: Double,
     val fat: Double,
     val name: String,
     val brand: String?,
-    val createdAt: Long
-)
+    val createdAt: Long,
+    val itemType: DiaryItemType = DiaryItemType.FOOD,
+    val mealGroupId: String? = null,
+    val mealGroupName: String? = null
+) {
+    /**
+     * Returns the display amount - either the entered amount or calculated from servings
+     */
+    val displayAmount: Double
+        get() = enteredAmount ?: (servingSize * numberOfServings)
+}
+
+enum class DiaryItemType {
+    FOOD,
+    RECIPE;
+
+    companion object {
+        fun fromApiValue(value: String): DiaryItemType {
+            return when (value.lowercase()) {
+                "recipe" -> RECIPE
+                else -> FOOD
+            }
+        }
+    }
+}
 
 enum class MealType(val apiValue: String, val displayName: String) {
     BREAKFAST("breakfast", "Breakfast"),

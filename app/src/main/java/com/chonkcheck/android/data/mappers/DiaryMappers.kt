@@ -5,6 +5,7 @@ import com.chonkcheck.android.data.api.dto.DiaryEntryDto
 import com.chonkcheck.android.data.db.entity.DiaryEntryEntity
 import com.chonkcheck.android.domain.model.CreateDiaryEntryParams
 import com.chonkcheck.android.domain.model.DiaryEntry
+import com.chonkcheck.android.domain.model.DiaryItemType
 import com.chonkcheck.android.domain.model.MealType
 import com.chonkcheck.android.domain.model.ServingUnit
 
@@ -15,15 +16,19 @@ fun DiaryEntryDto.toEntity(userId: String): DiaryEntryEntity = DiaryEntryEntity(
     mealType = mealType,
     foodId = foodId,
     recipeId = recipeId,
-    servingSize = quantity,
+    servingSize = food?.servingSize ?: savedRecipe?.totalServings ?: 1.0, // Base serving size
     servingUnit = food?.servingUnit ?: savedRecipe?.servingUnit ?: "serving",
-    numberOfServings = 1.0,
+    numberOfServings = quantity, // How many servings logged
+    enteredAmount = enteredAmount, // Optional: actual amount user entered
     calories = calories,
     protein = protein,
     carbs = carbs,
     fat = fat,
     name = name,
     brand = brand,
+    itemType = itemType,
+    mealGroupId = mealGroupId,
+    mealGroupName = mealGroupName,
     syncedAt = System.currentTimeMillis(),
     createdAt = timestamp.parseTimestamp() ?: System.currentTimeMillis(),
     updatedAt = System.currentTimeMillis()
@@ -39,13 +44,17 @@ fun DiaryEntryEntity.toDomain(): DiaryEntry = DiaryEntry(
     servingSize = servingSize,
     servingUnit = servingUnit.toServingUnit(),
     numberOfServings = numberOfServings,
+    enteredAmount = enteredAmount,
     calories = calories,
     protein = protein,
     carbs = carbs,
     fat = fat,
     name = name,
     brand = brand,
-    createdAt = createdAt
+    createdAt = createdAt,
+    itemType = DiaryItemType.fromApiValue(itemType),
+    mealGroupId = mealGroupId,
+    mealGroupName = mealGroupName
 )
 
 fun CreateDiaryEntryParams.toEntity(

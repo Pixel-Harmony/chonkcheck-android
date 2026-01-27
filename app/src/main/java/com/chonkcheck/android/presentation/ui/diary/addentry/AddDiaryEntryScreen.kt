@@ -30,15 +30,18 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -398,22 +401,39 @@ private fun DetailsPhaseContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Meal type selector
-        Text(
-            text = "Meal",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+        var mealDropdownExpanded by remember { mutableStateOf(false) }
 
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-            MealType.entries.forEachIndexed { index, mealType ->
-                SegmentedButton(
-                    shape = SegmentedButtonDefaults.itemShape(index = index, count = MealType.entries.size),
-                    onClick = { onMealTypeChange(mealType) },
-                    selected = uiState.mealType == mealType,
-                    icon = {}
-                ) {
-                    Text(mealType.displayName)
+        ExposedDropdownMenuBox(
+            expanded = mealDropdownExpanded,
+            onExpandedChange = { mealDropdownExpanded = it }
+        ) {
+            OutlinedTextField(
+                value = uiState.mealType.displayName,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Meal") },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = mealDropdownExpanded)
+                },
+                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+            )
+
+            ExposedDropdownMenu(
+                expanded = mealDropdownExpanded,
+                onDismissRequest = { mealDropdownExpanded = false }
+            ) {
+                MealType.entries.forEach { mealType ->
+                    DropdownMenuItem(
+                        text = { Text(mealType.displayName) },
+                        onClick = {
+                            onMealTypeChange(mealType)
+                            mealDropdownExpanded = false
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                    )
                 }
             }
         }

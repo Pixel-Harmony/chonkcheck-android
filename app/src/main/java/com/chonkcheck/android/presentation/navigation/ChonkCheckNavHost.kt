@@ -32,6 +32,7 @@ import com.chonkcheck.android.presentation.ui.auth.LoginScreen
 import com.chonkcheck.android.presentation.ui.dashboard.DashboardScreen
 import com.chonkcheck.android.presentation.ui.diary.DiaryScreen
 import com.chonkcheck.android.presentation.ui.diary.addentry.AddDiaryEntryScreen
+import com.chonkcheck.android.presentation.ui.diary.editentry.EditDiaryEntryScreen
 import com.chonkcheck.android.presentation.ui.foods.FoodFormScreen
 import com.chonkcheck.android.presentation.ui.foods.FoodsScreen
 import com.chonkcheck.android.presentation.ui.onboarding.OnboardingScreen
@@ -313,8 +314,9 @@ fun ChonkCheckNavHost(
                     navArgument(NavArgs.ENTRY_ID) { type = NavType.StringType }
                 )
             ) {
-                // TODO: Implement EditDiaryEntryScreen
-                PlaceholderScreen("Edit Entry")
+                EditDiaryEntryScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
 
             composable(Screen.Recipes.route) {
