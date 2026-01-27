@@ -4,7 +4,9 @@
       "Bash(git -C \"C:\\\\Users\\\\Scott\\\\code\\\\pixelharmony\\\\chonkcheck-android\" show --stat 9ca2ee9)",
       "Bash(git -C \"C:\\\\Users\\\\Scott\\\\code\\\\pixelharmony\\\\chonkcheck-android\" show --stat 6796225)",
       "Bash(xargs:*)",
-      "Bash(./gradlew.bat compileDebugKotlin:*)"
+      "Bash(./gradlew.bat compileDebugKotlin:*)",
+      "Bash(ls:*)",
+      "Bash(./gradlew.bat assembleDebug:*)"
     ]
   }
 }

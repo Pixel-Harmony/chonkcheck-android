@@ -10,6 +10,7 @@ import com.chonkcheck.android.data.api.SavedMealApi
 import com.chonkcheck.android.data.api.UserApi
 import com.chonkcheck.android.data.api.WeightApi
 import com.chonkcheck.android.data.api.interceptor.AuthInterceptor
+import com.chonkcheck.android.data.api.interceptor.TokenAuthenticator
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -50,9 +51,11 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator,
         loggingInterceptor: HttpLoggingInterceptor
     ): OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(authInterceptor)
+        .authenticator(tokenAuthenticator)
         .addInterceptor(loggingInterceptor)
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)

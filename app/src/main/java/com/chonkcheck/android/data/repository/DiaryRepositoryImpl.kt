@@ -267,11 +267,17 @@ class DiaryRepositoryImpl @Inject constructor(
             val currentUser = authRepository.currentUser.first() ?: return
 
             val response = diaryApi.getDiaryEntries(date.toString())
+            android.util.Log.d("DiaryRepo", "Fetched ${response.entries.size} entries from API")
+            response.entries.forEach { entry ->
+                android.util.Log.d("DiaryRepo", "Entry: id=${entry.id}, name=${entry.name}, itemType=${entry.itemType}, calories=${entry.calories}, recipeId=${entry.recipeId}")
+            }
             val entities = response.entries.map { it.toEntity(currentUser.id) }
+            android.util.Log.d("DiaryRepo", "Mapped to ${entities.size} entities")
 
             // Clear existing entries for date and insert fresh ones
             diaryDao.deleteAllForDate(currentUser.id, date.toString())
             diaryDao.insertAll(entities)
+            android.util.Log.d("DiaryRepo", "Inserted ${entities.size} entities into database")
 
             // Sync exercises from the response
             response.exercises?.let { exerciseDtos ->
@@ -293,6 +299,7 @@ class DiaryRepositoryImpl @Inject constructor(
                 diaryDao.deleteDayCompletion(currentUser.id, date.toString())
             }
         } catch (e: Exception) {
+            android.util.Log.e("DiaryRepo", "Error refreshing diary: ${e.message}", e)
             Sentry.captureException(e)
         }
     }

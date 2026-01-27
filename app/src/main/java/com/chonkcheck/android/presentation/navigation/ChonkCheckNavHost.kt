@@ -15,6 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -75,11 +77,7 @@ fun ChonkCheckNavHost(
                         NavigationBarItem(
                             icon = {
                                 Icon(
-                                    imageVector = if (isSelected) {
-                                        item.selectedIcon
-                                    } else {
-                                        item.unselectedIcon
-                                    },
+                                    painter = painterResource(item.iconRes),
                                     contentDescription = item.label
                                 )
                             },
@@ -88,7 +86,7 @@ fun ChonkCheckNavHost(
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = activeColor,
                                 selectedTextColor = activeColor,
-                                indicatorColor = activeColor.copy(alpha = 0.12f)
+                                indicatorColor = Color.Transparent
                             ),
                             onClick = {
                                 val isStartDestination = item.screen.route == Screen.Dashboard.route

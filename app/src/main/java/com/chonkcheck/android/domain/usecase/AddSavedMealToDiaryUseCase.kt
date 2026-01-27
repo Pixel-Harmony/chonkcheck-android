@@ -10,10 +10,9 @@ class AddSavedMealToDiaryUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(params: AddMealToDiaryParams): Result<List<DiaryEntry>> {
         if (params.items.isEmpty()) {
-            return Result.failure(IllegalArgumentException("Meal must have at least one item"))
+            return Result.failure(IllegalArgumentException("Meal must have at least one item!"))
         }
 
         return savedMealRepository.addMealToDiary(params)
     }
 }
-

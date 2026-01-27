@@ -7,11 +7,15 @@ import com.chonkcheck.android.domain.model.DiaryEntry
 import com.chonkcheck.android.domain.model.Exercise
 import com.chonkcheck.android.domain.model.MacroProgress
 import com.chonkcheck.android.domain.model.MealType
+import com.chonkcheck.android.domain.model.WeightUnit
+import com.chonkcheck.android.domain.repository.AuthRepository
+import com.chonkcheck.android.domain.repository.WeightRepository
 import com.chonkcheck.android.domain.usecase.CompleteDayUseCase
 import com.chonkcheck.android.domain.usecase.DeleteDiaryEntryUseCase
 import com.chonkcheck.android.domain.usecase.DeleteExerciseUseCase
 import com.chonkcheck.android.domain.usecase.GetDiaryDayUseCase
 import com.chonkcheck.android.domain.usecase.GetUserGoalsUseCase
+import com.chonkcheck.android.presentation.ui.diary.components.WeightProjectionData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +35,7 @@ data class DiaryUiState(
     val selectedDate: LocalDate = LocalDate.now(),
     val diaryDay: DiaryDay? = null,
     val macroProgress: MacroProgress? = null,
+    val weightProjection: WeightProjectionData? = null,
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val error: String? = null,
@@ -53,7 +58,9 @@ class DiaryViewModel @Inject constructor(
     private val deleteDiaryEntryUseCase: DeleteDiaryEntryUseCase,
     private val deleteExerciseUseCase: DeleteExerciseUseCase,
     private val completeDayUseCase: CompleteDayUseCase,
-    private val getUserGoalsUseCase: GetUserGoalsUseCase
+    private val getUserGoalsUseCase: GetUserGoalsUseCase,
+    private val authRepository: AuthRepository,
+    private val weightRepository: WeightRepository
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
@@ -75,20 +82,41 @@ class DiaryViewModel @Inject constructor(
             .flatMapLatest { date ->
                 combine(
                     getDiaryDayUseCase(date),
-                    getUserGoalsUseCase()
-                ) { diaryDay, goals ->
+                    getUserGoalsUseCase(),
+                    authRepository.currentUser,
+                    weightRepository.getWeightEntries(limit = 1)
+                ) { diaryDay, goals, user, weights ->
                     val progress = goals?.let {
                         MacroProgress.calculate(diaryDay.totals, it)
                     }
-                    Triple(date, diaryDay, progress)
+
+                    // Calculate weight projection if conditions are met
+                    val projection = if (
+                        date == LocalDate.now() &&
+                        diaryDay.isCompleted &&
+                        goals?.tdee != null &&
+                        weights.isNotEmpty()
+                    ) {
+                        val currentWeight = weights.first().weight
+                        val weightUnit = user?.unitPreferences?.weightUnit ?: WeightUnit.KG
+                        WeightProjectionData(
+                            tdee = goals.tdee,
+                            todayCalories = diaryDay.totals.calories,
+                            currentWeightKg = currentWeight,
+                            weightUnit = weightUnit
+                        )
+                    } else null
+
+                    DiaryData(date, diaryDay, progress, projection)
                 }
             }
-            .onEach { (date, diaryDay, progress) ->
+            .onEach { data ->
                 _uiState.update {
                     it.copy(
-                        selectedDate = date,
-                        diaryDay = diaryDay,
-                        macroProgress = progress,
+                        selectedDate = data.date,
+                        diaryDay = data.diaryDay,
+                        macroProgress = data.progress,
+                        weightProjection = data.projection,
                         isLoading = false,
                         isRefreshing = false,
                         error = null
@@ -106,6 +134,13 @@ class DiaryViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
     }
+
+    private data class DiaryData(
+        val date: LocalDate,
+        val diaryDay: DiaryDay,
+        val progress: MacroProgress?,
+        val projection: WeightProjectionData?
+    )
 
     fun selectDate(date: LocalDate) {
         _selectedDate.value = date

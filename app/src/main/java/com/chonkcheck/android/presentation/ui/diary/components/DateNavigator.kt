@@ -2,17 +2,20 @@ package com.chonkcheck.android.presentation.ui.diary.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun DateNavigator(
@@ -32,57 +36,65 @@ fun DateNavigator(
     onDateClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isToday = selectedDate == LocalDate.now()
-    val isYesterday = selectedDate == LocalDate.now().minusDays(1)
-    val isTomorrow = selectedDate == LocalDate.now().plusDays(1)
+    val dayNameFormatter = DateTimeFormatter.ofPattern("EEEE", Locale.getDefault())
+    val dateFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.getDefault())
 
-    val displayText = when {
-        isToday -> "Today"
-        isYesterday -> "Yesterday"
-        isTomorrow -> "Tomorrow"
-        else -> selectedDate.format(DateTimeFormatter.ofPattern("EEE, d MMM"))
-    }
-
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        IconButton(
-            onClick = onPreviousDay,
-            modifier = Modifier.size(40.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = "Previous day",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+            IconButton(
+                onClick = onPreviousDay,
+                modifier = Modifier.size(44.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    contentDescription = "Previous day",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-        Surface(
-            modifier = Modifier.clickable(onClick = onDateClick),
-            shape = RoundedCornerShape(8.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant
-        ) {
-            Text(
-                text = displayText,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-        }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(onClick = onDateClick),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = selectedDate.format(dayNameFormatter),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = selectedDate.format(dateFormatter),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-        IconButton(
-            onClick = onNextDay,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "Next day",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            IconButton(
+                onClick = onNextDay,
+                modifier = Modifier.size(44.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = "Next day",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -95,7 +107,8 @@ private fun DateNavigatorTodayPreview() {
             selectedDate = LocalDate.now(),
             onPreviousDay = {},
             onNextDay = {},
-            onDateClick = {}
+            onDateClick = {},
+            modifier = Modifier.padding(16.dp)
         )
     }
 }
@@ -108,7 +121,8 @@ private fun DateNavigatorOtherDayPreview() {
             selectedDate = LocalDate.now().minusDays(5),
             onPreviousDay = {},
             onNextDay = {},
-            onDateClick = {}
+            onDateClick = {},
+            modifier = Modifier.padding(16.dp)
         )
     }
 }

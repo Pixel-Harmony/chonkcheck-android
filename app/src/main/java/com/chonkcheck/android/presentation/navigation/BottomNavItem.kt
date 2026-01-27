@@ -1,18 +1,8 @@
 package com.chonkcheck.android.presentation.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Checklist
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Scale
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Checklist
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Inventory2
-import androidx.compose.material.icons.outlined.Scale
-import androidx.compose.material.icons.outlined.Settings
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import com.chonkcheck.android.R
 import com.chonkcheck.android.ui.theme.Amber
 import com.chonkcheck.android.ui.theme.AmberLight
 import com.chonkcheck.android.ui.theme.ChonkGreen
@@ -27,16 +17,14 @@ import com.chonkcheck.android.ui.theme.TealLight
 sealed class BottomNavItem(
     val screen: Screen,
     val label: String,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
+    @DrawableRes val iconRes: Int,
     val activeColorLight: Color,
     val activeColorDark: Color
 ) {
     data object Dashboard : BottomNavItem(
         screen = Screen.Dashboard,
         label = "Home",
-        selectedIcon = Icons.Filled.Home,
-        unselectedIcon = Icons.Outlined.Home,
+        iconRes = R.drawable.ic_nav_home,
         activeColorLight = Amber,
         activeColorDark = AmberLight
     )
@@ -44,8 +32,7 @@ sealed class BottomNavItem(
     data object Diary : BottomNavItem(
         screen = Screen.Diary,
         label = "Diary",
-        selectedIcon = Icons.Filled.Checklist,
-        unselectedIcon = Icons.Outlined.Checklist,
+        iconRes = R.drawable.ic_nav_diary,
         activeColorLight = ChonkGreen,
         activeColorDark = ChonkGreenLight
     )
@@ -53,8 +40,7 @@ sealed class BottomNavItem(
     data object Weight : BottomNavItem(
         screen = Screen.Weight,
         label = "Weight",
-        selectedIcon = Icons.Filled.Scale,
-        unselectedIcon = Icons.Outlined.Scale,
+        iconRes = R.drawable.ic_nav_weight,
         activeColorLight = Purple,
         activeColorDark = PurpleLight
     )
@@ -62,8 +48,7 @@ sealed class BottomNavItem(
     data object Foods : BottomNavItem(
         screen = Screen.Foods,
         label = "Foods",
-        selectedIcon = Icons.Filled.Inventory2,
-        unselectedIcon = Icons.Outlined.Inventory2,
+        iconRes = R.drawable.ic_nav_foods,
         activeColorLight = Coral,
         activeColorDark = CoralLight
     )
@@ -71,8 +56,7 @@ sealed class BottomNavItem(
     data object Settings : BottomNavItem(
         screen = Screen.Settings,
         label = "Settings",
-        selectedIcon = Icons.Filled.Settings,
-        unselectedIcon = Icons.Outlined.Settings,
+        iconRes = R.drawable.ic_nav_settings,
         activeColorLight = Teal,
         activeColorDark = TealLight
     )

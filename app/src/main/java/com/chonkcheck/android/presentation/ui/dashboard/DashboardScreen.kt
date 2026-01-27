@@ -13,7 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Scale
+import androidx.compose.ui.res.painterResource
+import com.chonkcheck.android.R
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -117,7 +118,7 @@ private fun DashboardScreenContent(
                 QuickActionCard(
                     title = "Weight",
                     subtitle = formatWeightSubtitle(uiState.latestWeight, uiState.weightUnit),
-                    icon = Icons.Filled.Scale,
+                    iconPainter = painterResource(R.drawable.ic_balance_scale),
                     backgroundColor = Teal,
                     onClick = onWeightClick,
                     modifier = Modifier.weight(1f)

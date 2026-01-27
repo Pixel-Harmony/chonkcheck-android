@@ -75,8 +75,8 @@ val md_theme_dark_inverseSurface = Color(0xFFFAFAFA) // Zinc 50
 val md_theme_dark_inverseOnSurface = Color(0xFF18181B) // Zinc 900
 val md_theme_dark_inversePrimary = ChonkGreen
 
-// Macro colors
-val ProteinColor = Color(0xFF3B82F6) // Blue 500
-val CarbsColor = Color(0xFFF59E0B) // Amber 500
-val FatColor = Color(0xFFEF4444) // Red 500
-val CaloriesColor = ChonkGreen
+// Macro colors (aligned with web)
+val CaloriesColor = Coral // Coral for calories
+val ProteinColor = Teal // Teal for protein
+val CarbsColor = ChonkGreen // Green for carbs
+val FatColor = Amber // Amber for fat

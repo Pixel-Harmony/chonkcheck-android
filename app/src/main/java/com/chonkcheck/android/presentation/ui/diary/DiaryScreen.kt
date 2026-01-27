@@ -43,6 +43,8 @@ import com.chonkcheck.android.presentation.ui.diary.components.DateNavigator
 import com.chonkcheck.android.presentation.ui.diary.components.ExerciseSection
 import com.chonkcheck.android.presentation.ui.diary.components.MealSection
 import com.chonkcheck.android.presentation.ui.diary.components.NetCaloriesSummary
+import com.chonkcheck.android.presentation.ui.diary.components.WeightProjection
+import com.chonkcheck.android.presentation.ui.diary.components.WeightProjectionData
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import java.time.LocalDate
 
@@ -157,17 +159,12 @@ fun DiaryScreenContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Date navigator
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            DateNavigator(
-                selectedDate = uiState.selectedDate,
-                onPreviousDay = onPreviousDay,
-                onNextDay = onNextDay,
-                onDateClick = onDateClick
-            )
-        }
+        DateNavigator(
+            selectedDate = uiState.selectedDate,
+            onPreviousDay = onPreviousDay,
+            onNextDay = onNextDay,
+            onDateClick = onDateClick
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -199,6 +196,11 @@ fun DiaryScreenContent(
                     onComplete = onCompleteDay,
                     onReopen = onReopenDay
                 )
+
+                // Weight projection (shows after completing today)
+                uiState.weightProjection?.let { projection ->
+                    WeightProjection(data = projection)
+                }
 
                 // Meal sections
                 MealType.entries.forEach { mealType ->

@@ -54,7 +54,7 @@ fun TodaySummaryCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(32.dp)
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     StatColumn(
                         value = formatNumber(calories),
@@ -85,7 +85,7 @@ private fun StatColumn(
 ) {
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = value,

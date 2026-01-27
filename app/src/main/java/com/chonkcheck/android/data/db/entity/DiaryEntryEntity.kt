@@ -1,7 +1,6 @@
 package com.chonkcheck.android.data.db.entity
 
 import androidx.room.Entity
-import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -13,15 +12,9 @@ import androidx.room.PrimaryKey
         Index("foodId"),
         Index("recipeId"),
         Index(value = ["date", "mealType"])
-    ],
-    foreignKeys = [
-        ForeignKey(
-            entity = FoodEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["foodId"],
-            onDelete = ForeignKey.SET_NULL
-        )
     ]
+    // Note: Foreign key removed - diary entries are self-contained with cached nutrition data
+    // and the referenced food may not exist locally (e.g., on fresh install)
 )
 data class DiaryEntryEntity(
     @PrimaryKey

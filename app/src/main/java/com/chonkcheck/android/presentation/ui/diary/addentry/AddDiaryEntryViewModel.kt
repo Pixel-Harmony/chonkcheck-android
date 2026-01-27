@@ -99,8 +99,8 @@ class AddDiaryEntryViewModel @Inject constructor(
     }
 
     private fun loadRecentItems() {
-        // Load recent foods
-        searchFoodsUseCase(FoodFilter(query = "", type = FoodFilterType.ALL, limit = 10))
+        // Load recent foods (including recipes)
+        searchFoodsUseCase(FoodFilter(query = "", type = FoodFilterType.ALL, limit = 10, includeRecipes = true))
             .onEach { foods ->
                 _uiState.update { it.copy(recentFoods = foods) }
             }
@@ -130,8 +130,8 @@ class AddDiaryEntryViewModel @Inject constructor(
             delay(300) // Debounce
             _uiState.update { it.copy(isSearching = true) }
 
-            // Search foods
-            searchFoodsUseCase(FoodFilter(query = query, type = FoodFilterType.ALL, limit = 50))
+            // Search foods (including recipes)
+            searchFoodsUseCase(FoodFilter(query = query, type = FoodFilterType.ALL, limit = 50, includeRecipes = true))
                 .onEach { foods ->
                     _uiState.update { it.copy(searchResults = foods, isSearching = false) }
                 }

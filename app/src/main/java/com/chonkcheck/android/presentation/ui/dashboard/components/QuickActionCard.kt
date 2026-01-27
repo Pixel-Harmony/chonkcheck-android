@@ -19,23 +19,77 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.chonkcheck.android.R
 import com.chonkcheck.android.ui.theme.ChonkCheckTheme
 import com.chonkcheck.android.ui.theme.ChonkGreen
 import com.chonkcheck.android.ui.theme.Teal
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Scale
 
 @Composable
 fun QuickActionCard(
     title: String,
     subtitle: String,
     icon: ImageVector,
+    backgroundColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    QuickActionCardImpl(
+        title = title,
+        subtitle = subtitle,
+        iconContent = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        },
+        backgroundColor = backgroundColor,
+        onClick = onClick,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun QuickActionCard(
+    title: String,
+    subtitle: String,
+    iconPainter: Painter,
+    backgroundColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    QuickActionCardImpl(
+        title = title,
+        subtitle = subtitle,
+        iconContent = {
+            Icon(
+                painter = iconPainter,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        },
+        backgroundColor = backgroundColor,
+        onClick = onClick,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun QuickActionCardImpl(
+    title: String,
+    subtitle: String,
+    iconContent: @Composable () -> Unit,
     backgroundColor: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -60,12 +114,7 @@ fun QuickActionCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
+                iconContent()
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -111,7 +160,7 @@ private fun QuickActionCardTealPreview() {
         QuickActionCard(
             title = "Weight",
             subtitle = "75.5 kg",
-            icon = Icons.Filled.Scale,
+            iconPainter = painterResource(R.drawable.ic_balance_scale),
             backgroundColor = Teal,
             onClick = {},
             modifier = Modifier.padding(16.dp)

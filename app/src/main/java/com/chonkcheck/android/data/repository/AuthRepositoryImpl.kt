@@ -56,14 +56,27 @@ class AuthRepositoryImpl @Inject constructor(
             val userProfile = credentials.user
             Log.d(TAG, "User profile: id=${userProfile.getId()}, email=${userProfile.email}, name=${userProfile.name}")
 
-            val user = userProfile.toDomain()
+            // Start with Auth0 user info
+            var user = userProfile.toDomain()
             Log.d(TAG, "Domain user: id=${user.id}, email=${user.email}")
 
-            userDao.insert(user.toEntity())
+            // Fetch full profile from backend API to get onboardingCompleted status
+            try {
+                val apiProfile = userApi.getUserProfile()
+                Log.d(TAG, "API profile fetched: onboardingCompleted=${apiProfile.onboardingCompleted}")
+                val entity = user.toEntity().mergeWithApiProfile(apiProfile)
+                userDao.insert(entity)
+                user = entity.toDomain()
+                Log.d(TAG, "User merged with API profile, onboardingCompleted=${user.onboardingCompleted}")
+            } catch (apiError: Exception) {
+                Log.w(TAG, "Failed to fetch API profile, using Auth0 profile only", apiError)
+                userDao.insert(user.toEntity())
+            }
+
             Log.d(TAG, "User inserted to DB")
 
             _authState.value = AuthState.Authenticated(user)
-            Log.d(TAG, "Auth state set to Authenticated")
+            Log.d(TAG, "Auth state set to Authenticated, onboardingCompleted=${user.onboardingCompleted}")
 
             Result.success(user)
         } catch (e: Exception) {

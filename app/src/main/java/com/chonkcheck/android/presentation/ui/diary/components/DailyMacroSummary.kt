@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.chonkcheck.android.domain.model.DailyGoals
 import com.chonkcheck.android.domain.model.MacroProgress
 import com.chonkcheck.android.domain.model.MacroTotals
@@ -66,67 +65,101 @@ fun DailyMacroSummary(
                 )
             }
         } else {
-            Column(
+            // All 4 macro circles in one row
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // Main calories display
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressWithText(
-                        progress = progress.caloriePercent,
-                        current = progress.current.calories.roundToInt(),
-                        goal = progress.goals.dailyCalorieTarget,
-                        label = "cal",
-                        color = CaloriesColor,
-                        size = 100.dp,
-                        strokeWidth = 8.dp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Macro progress row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    MacroProgressItem(
-                        label = "Protein",
-                        current = progress.current.protein.roundToInt(),
-                        goal = progress.goals.proteinTarget,
-                        progress = progress.proteinPercent,
-                        color = ProteinColor
-                    )
-                    MacroProgressItem(
-                        label = "Carbs",
-                        current = progress.current.carbs.roundToInt(),
-                        goal = progress.goals.carbsTarget,
-                        progress = progress.carbsPercent,
-                        color = CarbsColor
-                    )
-                    MacroProgressItem(
-                        label = "Fat",
-                        current = progress.current.fat.roundToInt(),
-                        goal = progress.goals.fatTarget,
-                        progress = progress.fatPercent,
-                        color = FatColor
-                    )
-                }
+                MacroCircleItem(
+                    label = "Cal",
+                    current = progress.current.calories.roundToInt(),
+                    goal = progress.goals.dailyCalorieTarget,
+                    progress = progress.caloriePercent,
+                    color = CaloriesColor,
+                    unit = ""
+                )
+                MacroCircleItem(
+                    label = "Pro",
+                    current = progress.current.protein.roundToInt(),
+                    goal = progress.goals.proteinTarget,
+                    progress = progress.proteinPercent,
+                    color = ProteinColor,
+                    unit = "g"
+                )
+                MacroCircleItem(
+                    label = "Carb",
+                    current = progress.current.carbs.roundToInt(),
+                    goal = progress.goals.carbsTarget,
+                    progress = progress.carbsPercent,
+                    color = CarbsColor,
+                    unit = "g"
+                )
+                MacroCircleItem(
+                    label = "Fat",
+                    current = progress.current.fat.roundToInt(),
+                    goal = progress.goals.fatTarget,
+                    progress = progress.fatPercent,
+                    color = FatColor,
+                    unit = "g"
+                )
             }
         }
     }
 }
 
 @Composable
-private fun CircularProgressWithText(
-    progress: Float,
+private fun MacroCircleItem(
+    label: String,
     current: Int,
     goal: Int,
-    label: String,
+    progress: Float,
+    color: Color,
+    unit: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Circle with percentage inside
+        CircularProgressWithPercent(
+            progress = progress,
+            color = color,
+            size = 64.dp,
+            strokeWidth = 5.dp
+        )
+
+        // Label
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
+        // Current value (bold)
+        Text(
+            text = formatNumber(current) + unit,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Bold
+            ),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        // Goal value (subtle)
+        Text(
+            text = "/ ${formatNumber(goal)}$unit",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun CircularProgressWithPercent(
+    progress: Float,
     color: Color,
     size: Dp,
     strokeWidth: Dp,
@@ -137,6 +170,9 @@ private fun CircularProgressWithText(
         animationSpec = tween(durationMillis = 500),
         label = "progress"
     )
+
+    // Cap at 100% for display but allow arc to show overflow
+    val displayPercent = (progress * 100).roundToInt().coerceAtMost(999)
 
     Box(
         modifier = modifier.size(size),
@@ -157,62 +193,24 @@ private fun CircularProgressWithText(
                 style = stroke
             )
 
-            // Progress arc
+            // Progress arc (capped at 100%)
             drawArc(
                 color = color,
                 startAngle = -90f,
-                sweepAngle = animatedProgress * 360f,
+                sweepAngle = animatedProgress.coerceAtMost(1f) * 360f,
                 useCenter = false,
                 style = stroke
             )
         }
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = formatNumber(current),
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "of ${formatNumber(goal)} $label",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun MacroProgressItem(
-    label: String,
-    current: Int,
-    goal: Int,
-    progress: Float,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressWithText(
-            progress = progress,
-            current = current,
-            goal = goal,
-            label = "g",
-            color = color,
-            size = 64.dp,
-            strokeWidth = 5.dp
-        )
-        Spacer(modifier = Modifier.height(4.dp))
+        // Percentage text inside circle
         Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = "${displayPercent}%",
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            ),
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

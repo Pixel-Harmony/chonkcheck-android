@@ -34,6 +34,42 @@ data class DiaryDayResponse(
     val isCompleted: Boolean = false
 )
 
+/**
+ * Nutrition data included in diary entries.
+ * This is the pre-calculated nutrition for the entry (already multiplied by quantity).
+ */
+@Serializable
+data class DiaryEntryNutritionDto(
+    val calories: Double,
+    val protein: Double,
+    val carbs: Double,
+    val fat: Double
+)
+
+/**
+ * Simplified recipe data embedded in diary entries.
+ * This is NOT the full RecipeDto - it's a minimal representation.
+ */
+@Serializable
+data class DiaryEntrySavedRecipeDto(
+    val name: String,
+    val totalServings: Double? = null,
+    val servingUnit: String? = null,
+    val ingredientCount: Int? = null
+)
+
+/**
+ * Simplified food data embedded in diary entries.
+ * This is NOT the full FoodDto - it's a minimal representation for display.
+ */
+@Serializable
+data class DiaryEntryFoodDto(
+    val name: String,
+    val brand: String? = null,
+    val servingSize: Double? = null,
+    val servingUnit: String? = null
+)
+
 @Serializable
 data class DiaryEntryDto(
     val id: String,
@@ -48,8 +84,9 @@ data class DiaryEntryDto(
     val enteredAmount: Double? = null,
     val mealGroupId: String? = null,
     val mealGroupName: String? = null,
-    val food: FoodDto? = null,
-    val savedRecipe: RecipeDto? = null
+    val food: DiaryEntryFoodDto? = null,
+    val savedRecipe: DiaryEntrySavedRecipeDto? = null,
+    val nutrition: DiaryEntryNutritionDto? = null
 ) {
     val name: String
         get() = food?.name ?: savedRecipe?.name ?: "Unknown"
@@ -57,33 +94,18 @@ data class DiaryEntryDto(
     val brand: String?
         get() = food?.brand
 
+    // Use the pre-calculated nutrition from the API (always available in diary entries)
     val calories: Double
-        get() = when {
-            food != null -> food.calories * quantity
-            savedRecipe != null -> savedRecipe.caloriesPerServing * quantity
-            else -> 0.0
-        }
+        get() = nutrition?.calories ?: 0.0
 
     val protein: Double
-        get() = when {
-            food != null -> food.protein * quantity
-            savedRecipe != null -> savedRecipe.proteinPerServing * quantity
-            else -> 0.0
-        }
+        get() = nutrition?.protein ?: 0.0
 
     val carbs: Double
-        get() = when {
-            food != null -> food.carbs * quantity
-            savedRecipe != null -> savedRecipe.carbsPerServing * quantity
-            else -> 0.0
-        }
+        get() = nutrition?.carbs ?: 0.0
 
     val fat: Double
-        get() = when {
-            food != null -> food.fat * quantity
-            savedRecipe != null -> savedRecipe.fatPerServing * quantity
-            else -> 0.0
-        }
+        get() = nutrition?.fat ?: 0.0
 }
 
 @Serializable
