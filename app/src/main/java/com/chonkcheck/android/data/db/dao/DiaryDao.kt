@@ -28,7 +28,7 @@ interface DiaryDao {
                 WHEN 'breakfast' THEN 0
                 WHEN 'lunch' THEN 1
                 WHEN 'dinner' THEN 2
-                WHEN 'snacks' THEN 3
+                WHEN 'snack' THEN 3
                 ELSE 4
             END,
             createdAt

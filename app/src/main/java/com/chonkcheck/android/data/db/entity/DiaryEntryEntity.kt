@@ -22,7 +22,7 @@ data class DiaryEntryEntity(
     val userId: String,
     val date: String, // ISO date (YYYY-MM-DD)
 
-    // Meal type: "breakfast", "lunch", "dinner", "snacks"
+    // Meal type: "breakfast", "lunch", "dinner", "snack"
     val mealType: String,
 
     // Reference to food or recipe

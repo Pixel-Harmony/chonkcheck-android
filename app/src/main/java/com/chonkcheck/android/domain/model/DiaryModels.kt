@@ -49,7 +49,7 @@ enum class MealType(val apiValue: String, val displayName: String) {
     BREAKFAST("breakfast", "Breakfast"),
     LUNCH("lunch", "Lunch"),
     DINNER("dinner", "Dinner"),
-    SNACKS("snacks", "Snacks");
+    SNACKS("snack", "Snacks");
 
     companion object {
         fun fromApiValue(value: String): MealType {
